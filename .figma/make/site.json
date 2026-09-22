@@ -1,0 +1,10 @@
+{
+  "description": "Gestione usuarios, permisos, catálogo y red logística en un panel minimalista en español diseñado para tiendas de retail de alta gama.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
