@@ -13,7 +13,14 @@ export interface SpringPage<T> {
 
 // ── Singleton state ────────────────────────────────────────────────────────
 
-let _baseUrl = 'http://localhost:8080/api/v1'
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim()
+const defaultApiUrl = import.meta.env.DEV ? 'http://localhost:8080/api/v1' : ''
+
+if (import.meta.env.PROD && !configuredApiUrl) {
+  throw new Error('VITE_API_URL debe estar configurada para el build de producción')
+}
+
+let _baseUrl = (configuredApiUrl || defaultApiUrl).replace(/\/$/, '')
 let _accessToken: string | null = null
 let _onUnauthorized: (() => void) | null = null
 let _onBaseUrlChange: ((url: string) => void) | null = null
