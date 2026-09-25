@@ -55,6 +55,8 @@ Si `VITE_API_URL` no está definida, el modo de desarrollo usa `http://localhost
 
 ## ☁️ Despliegue en Vercel
 
+> Actualmente [desplegado](https://supplychainmanager.vercel.app/) y funcionando.
+
 Vercel puede detectar este proyecto como una aplicación Vite con esta configuración:
 
 - **Framework preset:** Vite
