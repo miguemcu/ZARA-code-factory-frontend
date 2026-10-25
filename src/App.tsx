@@ -9,6 +9,11 @@ import {
   type MfaActivarResponse, type MfaConfirmarResponse,
 } from './api'
 import { InventoryView, ReplenishmentView, SalesView } from './Operations'
+import {
+  categoriasCache, loadStoreDetail, loadTiendas, loadVariantCatalog, resetCaches, templatesCache, tiendasCache,
+  variantesCache, type Catalogs,
+} from './catalogCache'
+import { VarianteSelector } from './VarianteSelector'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -1042,13 +1047,14 @@ function CategoriasView() {
       : await http.post<CategoriaResponse>('/categorias', { nombre })
     setSaving(false)
     if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
+    categoriasCache.upsert(res.data!)
     setShowForm(false); setEdit(null); setNombre(''); load(page)
   }
 
   const del = async (id: string) => {
     const res = await http.delete(`/categorias/${id}`)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+    else { categoriasCache.remove(id); load(page) }
   }
 
   return (
@@ -1131,13 +1137,14 @@ function TemplatesView() {
       : await http.post<TemplateResponse>('/templates', { ...commonBody, categoriaId: f.categoriaId })
     setSaving(false)
     if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
+    templatesCache.upsert(res.data!)
     setShowForm(false); setEdit(null); setF({ nombre: '', temporada: '', proveedor: '', precioBase: '', categoriaId: '' }); load(page)
   }
 
   const del = async (id: string) => {
     const res = await http.delete(`/templates/${id}`)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+    else { templatesCache.remove(id); load(page) }
   }
 
   const openEdit = (t: TemplateResponse) => {
@@ -1211,13 +1218,16 @@ function VariantesView() {
   const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<VarianteResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
   const [templates, setTemplates] = useState<TemplateResponse[]>([])
-  const [skuSearch, setSkuSearch] = useState('')
+  const [selectedVariantId, setSelectedVariantId] = useState('')
+  const [catalogs, setCatalogs] = useState<Catalogs | null>(null)
   const [skuResult, setSkuResult] = useState<VarianteResponse | null | 'notfound'>(null)
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<AppBanner | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [edit, setEdit] = useState<VarianteResponse | null>(null)
   const [f, setF] = useState({ sku: '', talla: '', color: '', templateId: '' })
+  // Mientras el usuario no toque el SKU, cambiar de template lo vuelve a generar
+  const [skuEditado, setSkuEditado] = useState(false)
   const [saving, setSaving] = useState(false)
   const [skuLoading, setSkuLoading] = useState(false)
 
@@ -1234,14 +1244,15 @@ function VariantesView() {
     else setPageData(res.data!)
   }, [size])
 
-  useEffect(() => { load(page); loadTemplates() }, [load, loadTemplates, page])
+  useEffect(() => { load(page); loadTemplates(); loadVariantCatalog().then(setCatalogs).catch(() => undefined) }, [load, loadTemplates, page])
 
   const templateName = (id: string) => templates.find(t => t.id === id)?.nombre ?? 'Template no disponible'
 
   const searchBySku = async () => {
-    if (!skuSearch.trim()) return
+    const selected = catalogs?.variantesById.get(selectedVariantId)
+    if (!selected) return
     setSkuLoading(true)
-    const res = await http.get<VarianteResponse>(`/variantes/sku/${encodeURIComponent(skuSearch.trim())}`)
+    const res = await http.get<VarianteResponse>(`/variantes/sku/${encodeURIComponent(selected.sku)}`)
     setSkuLoading(false)
     if (res.error?.status === 404) setSkuResult('notfound')
     else if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
@@ -1249,29 +1260,38 @@ function VariantesView() {
   }
 
   const save = async () => {
-    if (!f.sku || !f.templateId) return
+    if (!f.sku.trim() || !f.templateId) return
     setSaving(true)
-    const body = { sku: f.sku, talla: f.talla || null, color: f.color || null, templateId: f.templateId }
+    const body = { sku: f.sku.trim(), talla: f.talla || null, color: f.color || null, templateId: f.templateId }
     const res = edit
       ? await http.put<VarianteResponse>(`/variantes/${edit.id}`, body)
       : await http.post<VarianteResponse>('/variantes', body)
     setSaving(false)
     if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
+    variantesCache.upsert(res.data!)
+    loadVariantCatalog().then(setCatalogs).catch(() => undefined)
     setShowForm(false); setEdit(null); setF({ sku: '', talla: '', color: '', templateId: '' }); load(page)
   }
 
   const del = async (id: string) => {
     const res = await http.delete(`/variantes/${id}`)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+    else { variantesCache.remove(id); loadVariantCatalog().then(setCatalogs).catch(() => undefined); load(page) }
   }
 
   const openEdit = (v: VarianteResponse) => {
-    setEdit(v); setF({ sku: v.sku, talla: v.talla ?? '', color: v.color ?? '', templateId: v.templateId }); setShowForm(true)
+    setEdit(v); setF({ sku: v.sku, talla: v.talla ?? '', color: v.color ?? '', templateId: v.templateId }); setSkuEditado(true); setShowForm(true)
+  }
+
+  const generateSku = (templateId: string) => {
+    const prefix = (templates.find(template => template.id === templateId)?.nombre ?? 'VARIANTE')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
+    return `${prefix || 'VARIANTE'}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`.slice(0, 60)
   }
 
   const openCreate = () => {
-    setEdit(null); setF({ sku: '', talla: '', color: '', templateId: templates[0]?.id ?? '' }); setShowForm(true)
+    const templateId = templates[0]?.id ?? ''
+    setEdit(null); setF({ sku: templateId ? generateSku(templateId) : '', talla: '', color: '', templateId }); setSkuEditado(false); setShowForm(true)
   }
 
   return (
@@ -1286,10 +1306,10 @@ function VariantesView() {
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: skuResult ? 12 : 0 }}>
             <div style={{ flex: 1 }}>
-              <Input value={skuSearch} onChange={setSkuSearch} mono placeholder="CAM-BAS-001" />
+              {catalogs ? <VarianteSelector value={selectedVariantId} onChange={setSelectedVariantId} catalogs={catalogs} label="SKU" /> : <div style={{ color: T.faint }}>Cargando catálogo…</div>}
             </div>
             <Btn variant="primary" onClick={searchBySku} loading={skuLoading}>Buscar SKU</Btn>
-            {skuResult && <Btn variant="ghost" onClick={() => { setSkuResult(null); setSkuSearch('') }}>Limpiar</Btn>}
+            {skuResult && <Btn variant="ghost" onClick={() => { setSkuResult(null); setSelectedVariantId('') }}>Limpiar</Btn>}
           </div>
           {skuResult === 'notfound' && (
             <div style={{ fontSize: 13, color: T.danger, borderLeft: `2px solid ${T.danger}`, paddingLeft: 10, marginTop: 8 }}>No encontrado</div>
@@ -1342,10 +1362,17 @@ function VariantesView() {
       {showForm && (
         <Modal title={edit ? 'Editar Variante' : 'Nueva Variante'} onClose={() => { setShowForm(false); setEdit(null) }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>SKU</Label><Input value={f.sku} onChange={v => setF(p => ({ ...p, sku: v }))} mono placeholder="CAM-BAS-001" maxLength={60} /></div>
+            <div>
+              <Label required>SKU</Label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}><Input value={f.sku} onChange={v => { setSkuEditado(true); setF(p => ({ ...p, sku: v })) }} mono maxLength={60} /></div>
+                <Btn variant="ghost" small disabled={!f.templateId} onClick={() => { setSkuEditado(false); setF(p => ({ ...p, sku: generateSku(p.templateId) })) }}>Generar</Btn>
+              </div>
+              {!edit && <div style={{ fontSize: 11, color: T.faint, marginTop: 5 }}>Se genera a partir del template; puedes cambiarlo.</div>}
+            </div>
             <div>
               <Label required>Template</Label>
-              <Select value={f.templateId} onChange={v => setF(p => ({ ...p, templateId: v }))}>
+              <Select value={f.templateId} onChange={v => setF(p => ({ ...p, templateId: v, sku: skuEditado || !v ? p.sku : generateSku(v) }))}>
                 <option value="">— Seleccionar template —</option>
                 {templates.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
               </Select>
@@ -1395,7 +1422,8 @@ function TiendasView() {
 
   const changeStatus = async (store: TiendaResponse) => {
     const res = store.estado === 'ACTIVA' ? await http.delete(`/tiendas/${store.id}`) : await http.put<TiendaResponse>(`/tiendas/${store.id}/activar`)
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); else load(page)
+    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
+    else { tiendasCache.upsert(res.data ?? { ...store, estado: 'INACTIVA' }); load(page) }
   }
 
   const openDetail = async (id: string) => {
@@ -1418,6 +1446,7 @@ function TiendasView() {
       if (res.error.status === 400) setFormError(res.error.mensaje); else setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
       return
     }
+    tiendasCache.upsert(res.data!)
     setShowForm(false); setEdit(null); setNombre(''); setUbicacion(''); load(page)
     if (!edit) openDetail(res.data!.id)
   }
@@ -1636,34 +1665,44 @@ function BodegasView() {
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<BodegaTiendaResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
-  const [tiendas, setTiendas] = useState<TiendaResponse[]>([])
+  const [tiendas, setTiendas] = useState<Map<string, TiendaResponse>>(new Map())
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<AppBanner | null>(null)
 
   const load = useCallback(async (p: number) => {
     setLoading(true)
-    const [warehouses, stores] = await Promise.all([
-      http.get<SpringPage<BodegaTiendaResponse>>(`/bodegas-tienda?page=${p}&size=${size}`),
-      http.get<SpringPage<TiendaResponse>>('/tiendas?page=0&size=200'),
-    ])
+    const warehouses = await http.get<SpringPage<BodegaTiendaResponse>>(`/bodegas-tienda?page=${p}&size=${size}`)
     setLoading(false)
     if (warehouses.error) setBanner({ status: warehouses.error.status as HttpStatus, mensaje: warehouses.error.mensaje })
-    else setPageData(warehouses.data!)
-    if (!stores.error) setTiendas(stores.data!.content)
+    else {
+      setPageData(warehouses.data!)
+      try {
+        const next = new Map((await loadTiendas()).map(item => [item.id, item]))
+        const missing = [...new Set(warehouses.data!.content.map(item => item.tiendaId).filter(id => !next.has(id)))]
+        await Promise.all(missing.map(async id => {
+          try { next.set(id, await loadStoreDetail(id)) } catch { /* unresolved stores render as em dashes */ }
+        }))
+        setTiendas(next)
+      } catch (error) {
+        const apiError = error as { status: number; mensaje: string }
+        setBanner({ status: apiError.status as HttpStatus, mensaje: apiError.mensaje })
+      }
+    }
   }, [size])
 
   useEffect(() => { load(page) }, [load, page])
-  const storeStatus = (id: string) => tiendas.find(t => t.id === id)?.estado
+  const store = (id: string) => tiendas.get(id)
 
   return <Shell title="Bodegas de Tienda" banner={banner} onBannerClose={() => setBanner(null)}>
     <div style={{ fontSize: 12, color: T.muted, marginBottom: 14 }}>Vista de solo lectura. Las bodegas se crean automáticamente con cada tienda.</div>
     <div style={{ border: `1px solid ${T.rule}` }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <THead cols={['Tienda', 'Ubicación', 'Estado de la tienda']} />
       <tbody>{loading ? <LoadingRow cols={3} /> : pageData.content.length === 0 ? <EmptyRow cols={3} /> : pageData.content.map(b => {
-        const estado = storeStatus(b.tiendaId)
+        const resolved = store(b.tiendaId)
+        const estado = resolved?.estado
         return <TRow key={b.id}>
-          <TD><strong style={{ fontWeight: 500 }}>{b.tiendaNombre ?? 'Sin nombre disponible'}</strong></TD>
-          <TD>{b.tiendaUbicacion ?? 'Sin ubicación disponible'}</TD>
+          <TD><strong style={{ fontWeight: 500 }}>{b.tiendaNombre ?? resolved?.nombre ?? '—'}</strong></TD>
+          <TD>{b.tiendaUbicacion ?? resolved?.ubicacion ?? '—'}</TD>
           <TD>{estado ? <Badge value={estado} variant={estado === 'ACTIVA' ? 'active' : 'inactive'} /> : <span style={{ color: T.faint }}>No disponible</span>}</TD>
         </TRow>
       })}</tbody>
@@ -1758,14 +1797,14 @@ export default function App() {
 
   const handleLogout = useCallback(async () => {
     await http.postPublic('/auth/logout')
-    apiConfig.setToken(null)
+    apiConfig.setToken(null); resetCaches()
     setUser(null); setAuthState('login'); setView('usuarios')
   }, [])
 
   // Register 401 handler
   useEffect(() => {
     apiConfig.onUnauthorized(() => {
-      apiConfig.setToken(null); setUser(null); setAuthState('login')
+      apiConfig.setToken(null); resetCaches(); setUser(null); setAuthState('login')
     })
   }, [])
 
