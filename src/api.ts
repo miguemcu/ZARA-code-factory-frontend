@@ -71,7 +71,7 @@ async function doFetch<T>(
       if (ok) return doFetch<T>(path, options, false)
       _onUnauthorized?.()
     }
-    const msg = (body as Record<string, string> | null)?.mensaje ?? `Error HTTP ${res.status}`
+    const msg = (body as Record<string, string> | null)?.mensaje ?? 'No fue posible completar la solicitud'
     return { data: null, error: { status: res.status, mensaje: msg } }
   }
 
@@ -177,6 +177,24 @@ export interface TiendaResponse {
   estado: 'ACTIVA' | 'INACTIVA'
   creadoEn: string
   actualizadoEn: string
+}
+
+export interface TiendaConNodosResponse extends TiendaResponse {
+  almacenId: string
+  bodegaId: string
+}
+
+export interface TiendaAsignadaResponse {
+  id: string
+  nombre: string
+  activa: boolean
+}
+
+export interface PrioridadTiendaCdResponse {
+  id: string
+  tiendaId: string
+  cdId: string
+  ordenPrioridad: number
 }
 
 export interface CentroDistribucionResponse {

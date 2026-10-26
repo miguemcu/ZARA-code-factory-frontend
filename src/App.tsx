@@ -4,15 +4,22 @@ import {
   type LoginResponse, type UsuarioResponse, type RolResponse, type ScopeResponse,
   type CategoriaResponse, type TemplateResponse, type VarianteResponse,
   type TiendaResponse, type CentroDistribucionResponse, type CentroDistribucionConNodoResponse,
+  type TiendaConNodosResponse, type TiendaAsignadaResponse, type PrioridadTiendaCdResponse,
   type BodegaTiendaResponse, type SpringPage,
   type MfaActivarResponse, type MfaConfirmarResponse,
 } from './api'
+import { InventoryView, ReplenishmentView, SalesView } from './Operations'
+import {
+  categoriasCache, loadStoreDetail, loadTiendas, loadVariantCatalog, resetCaches, templatesCache, tiendasCache,
+  variantesCache, type Catalogs,
+} from './catalogCache'
+import { VarianteSelector } from './VarianteSelector'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 type AuthState = 'login' | 'mfa' | 'app'
-type View = 'perfil' | 'usuarios' | 'roles' | 'scopes' | 'categorias' | 'templates' | 'variantes' | 'tiendas' | 'centros' | 'bodegas'
-type HttpStatus = 400 | 401 | 403 | 409 | 500 | 0
+type View = 'perfil' | 'usuarios' | 'roles' | 'scopes' | 'categorias' | 'templates' | 'variantes' | 'tiendas' | 'centros' | 'bodegas' | 'inventario' | 'ventas' | 'reposicion'
+type HttpStatus = 400 | 401 | 403 | 404 | 409 | 500 | 0
 
 interface AppBanner { status: HttpStatus; mensaje: string }
 
@@ -44,6 +51,9 @@ const NAV: { title: string; items: { id: View; label: string }[] }[] = [
       { id: 'bodegas', label: 'Bodegas de Tienda' },
     ],
   },
+  { title: 'Inventario', items: [{ id: 'inventario', label: 'Operaciones de Inventario' }] },
+  { title: 'Punto de venta', items: [{ id: 'ventas', label: 'Ventas y Demanda' }] },
+  { title: 'Reposición interna', items: [{ id: 'reposicion', label: 'Reposición y Traspasos' }] },
 ]
 
 // ─── Design tokens (inline — no external theme file needed) ─────────────────
@@ -78,10 +88,10 @@ function Label({ children, required }: { children: React.ReactNode; required?: b
 }
 
 function Input({
-  value, onChange, placeholder, type = 'text', mono, readOnly, autoFocus,
+  value, onChange, placeholder, type = 'text', mono, readOnly, autoFocus, maxLength,
 }: {
   value: string; onChange?: (v: string) => void; placeholder?: string
-  type?: string; mono?: boolean; readOnly?: boolean; autoFocus?: boolean
+  type?: string; mono?: boolean; readOnly?: boolean; autoFocus?: boolean; maxLength?: number
 }) {
   return (
     <input
@@ -89,6 +99,7 @@ function Input({
       value={value}
       readOnly={readOnly}
       autoFocus={autoFocus}
+      maxLength={maxLength}
       placeholder={placeholder}
       onChange={e => onChange?.(e.target.value)}
       style={{
@@ -103,21 +114,21 @@ function Input({
   )
 }
 
-function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
+function Select({ value, onChange, children, disabled }: { value: string; onChange: (v: string) => void; children: React.ReactNode; disabled?: boolean }) {
   return (
     <select
-      value={value} onChange={e => onChange(e.target.value)}
-      style={{ border: `1px solid ${T.rule}`, background: T.canvas, color: T.ink, fontFamily: 'var(--font-sans)', fontSize: 14, padding: '9px 12px', width: '100%', outline: 'none', appearance: 'none' }}
+      value={value} onChange={e => onChange(e.target.value)} disabled={disabled}
+      style={{ border: `1px solid ${T.rule}`, background: disabled ? T.surface : T.canvas, color: T.ink, fontFamily: 'var(--font-sans)', fontSize: 14, padding: '9px 12px', width: '100%', outline: 'none', appearance: 'none', opacity: disabled ? 0.7 : 1 }}
     >
       {children}
     </select>
   )
 }
 
-function Textarea({ value, onChange, placeholder, rows = 3 }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
+function Textarea({ value, onChange, placeholder, rows = 3, maxLength }: { value: string; onChange: (v: string) => void; placeholder?: string; rows?: number; maxLength?: number }) {
   return (
     <textarea
-      value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
+      value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows} maxLength={maxLength}
       style={{ border: `1px solid ${T.rule}`, background: T.canvas, color: T.ink, fontFamily: 'var(--font-sans)', fontSize: 14, padding: '9px 12px', width: '100%', outline: 'none', resize: 'vertical', transition: 'border-color .15s' }}
       onFocus={e => (e.target.style.borderColor = T.ink)}
       onBlur={e => (e.target.style.borderColor = T.rule)}
@@ -171,11 +182,12 @@ function Badge({ value, variant = 'neutral' }: { value: string; variant?: 'neutr
 
 function Banner({ banner, onClose }: { banner: AppBanner; onClose: () => void }) {
   const cfg: Record<number, { label: string; side: string }> = {
-    400: { label: '400 Bad Request', side: T.danger },
-    401: { label: '401 No Autorizado', side: '#D97706' },
-    403: { label: '403 Acceso Denegado', side: T.danger },
-    409: { label: '409 Conflicto', side: '#7C3AED' },
-    500: { label: '500 Error del Servidor', side: T.danger },
+    400: { label: 'Revisa los datos', side: T.danger },
+    401: { label: 'Sesión no autorizada', side: '#D97706' },
+    403: { label: 'Acceso denegado', side: T.danger },
+    404: { label: 'No encontrado', side: T.muted },
+    409: { label: 'Conflicto', side: '#7C3AED' },
+    500: { label: 'Error del servidor', side: T.danger },
     0:   { label: 'Error de Conexión', side: T.muted },
   }
   const c = cfg[banner.status] ?? cfg[0]
@@ -183,7 +195,7 @@ function Banner({ banner, onClose }: { banner: AppBanner; onClose: () => void })
     <div style={{ borderLeft: `3px solid ${c.side}`, background: T.surface, padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: c.side, whiteSpace: 'nowrap', paddingTop: 1 }}>{c.label}</span>
-        <span style={{ fontSize: 13, color: T.ink }}>{banner.mensaje}</span>
+        <span style={{ fontSize: 13, color: T.ink }}>{banner.status === 403 ? 'Acceso denegado: falta el permiso requerido' : banner.mensaje}</span>
       </div>
       <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.faint, fontSize: 18, lineHeight: 1, padding: 0, flexShrink: 0 }}>×</button>
     </div>
@@ -242,15 +254,21 @@ function LoadingRow({ cols }: { cols: number }) {
 
 // ─── Paginator ──────────────────────────────────────────────────────────────
 
-function Paginator({ page, totalPages, totalElements, size, onPage }: {
-  page: number; totalPages: number; totalElements: number; size: number; onPage: (p: number) => void
+function Paginator({ page, totalPages, totalElements, size, onPage, onSize }: {
+  page: number; totalPages: number; totalElements: number; size: number; onPage: (p: number) => void; onSize: (size: number) => void
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderTop: `1px solid ${T.rule}`, fontSize: 12, color: T.muted }}>
-      <span style={{ fontFamily: 'var(--font-mono)' }}>{totalElements} resultado{totalElements !== 1 ? 's' : ''} · {size} por página</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span>Resultados por página</span>
+        <select value={size} onChange={e => onSize(Number(e.target.value))} style={{ border: `1px solid ${T.rule}`, background: T.canvas, padding: '4px 8px', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+          {[10, 20, 50].map(option => <option key={option} value={option}>{option}</option>)}
+        </select>
+        <span style={{ fontFamily: 'var(--font-mono)' }}>{totalElements} resultado{totalElements !== 1 ? 's' : ''}</span>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <button onClick={() => onPage(page - 1)} disabled={page === 0} style={pagerBtn(page === 0)}>‹</button>
-        <span style={{ padding: '4px 12px', fontFamily: 'var(--font-mono)', fontSize: 12 }}>Pág. {page + 1} de {Math.max(1, totalPages)}</span>
+        <span style={{ padding: '4px 12px', fontFamily: 'var(--font-mono)', fontSize: 12 }}>Página {page + 1} de {Math.max(1, totalPages)}</span>
         <button onClick={() => onPage(page + 1)} disabled={page >= totalPages - 1} style={pagerBtn(page >= totalPages - 1)}>›</button>
       </div>
     </div>
@@ -321,7 +339,7 @@ function ApiBar({ baseUrl, onChangeUrl }: { baseUrl: string; onChangeUrl: (url: 
 
   return (
     <div style={{ borderBottom: `1px solid ${T.rule}`, background: T.surface, padding: '6px 24px', display: 'flex', alignItems: 'center', gap: 12, minHeight: 36 }}>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', color: T.faint, textTransform: 'uppercase', flexShrink: 0 }}>API Endpoint</span>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', color: T.faint, textTransform: 'uppercase', flexShrink: 0 }}>API Endpoint:</span>
       {editing ? (
         <form onSubmit={e => { e.preventDefault(); commit() }} style={{ flex: 1, display: 'flex', gap: 6, alignItems: 'center' }}>
           <input
@@ -596,138 +614,130 @@ function PerfilView({ user }: { user: UsuarioResponse }) {
 function UsuariosView() {
   const [data, setData] = useState<UsuarioResponse[]>([])
   const [roles, setRoles] = useState<RolResponse[]>([])
+  const [tiendas, setTiendas] = useState<TiendaResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<AppBanner | null>(null)
   const [showCreate, setShowCreate] = useState(false)
-  const [showRoles, setShowRoles] = useState<UsuarioResponse | null>(null)
+  const [selected, setSelected] = useState<UsuarioResponse | null>(null)
   const [userRoles, setUserRoles] = useState<RolResponse[]>([])
-
-  // Create form
+  const [userTiendas, setUserTiendas] = useState<TiendaAsignadaResponse[]>([])
+  const [rolId, setRolId] = useState('')
+  const [tiendaId, setTiendaId] = useState('')
   const [email, setEmail] = useState('')
   const [nombre, setNombre] = useState('')
   const [pass, setPass] = useState('')
+  const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const showError = (status: number, mensaje: string, inForm = false) => {
+    if (status === 400 && inForm) setFormError(mensaje)
+    else setBanner({ status: status as HttpStatus, mensaje })
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await http.get<UsuarioResponse[]>('/usuarios')
+    const [usersRes, rolesRes, storesRes] = await Promise.all([
+      http.get<UsuarioResponse[]>('/usuarios'),
+      http.get<RolResponse[]>('/roles'),
+      http.get<SpringPage<TiendaResponse>>('/tiendas?page=0&size=200'),
+    ])
     setLoading(false)
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else setData(res.data!)
+    if (usersRes.error) showError(usersRes.error.status, usersRes.error.mensaje)
+    else setData(usersRes.data!)
+    if (!rolesRes.error) setRoles(rolesRes.data!)
+    if (!storesRes.error) setTiendas(storesRes.data!.content)
   }, [])
 
-  const loadRoles = useCallback(async () => {
-    const res = await http.get<RolResponse[]>('/roles')
-    if (!res.error) setRoles(res.data!)
-  }, [])
-
-  useEffect(() => { load(); loadRoles() }, [load, loadRoles])
+  useEffect(() => { load() }, [load])
 
   const createUser = async () => {
-    if (!email || !nombre || !pass) return
-    setSaving(true)
+    if (!email || !nombre || pass.length < 12 || pass.length > 128) { setFormError('Completa los campos y usa una contraseña de 12 a 128 caracteres.'); return }
+    setSaving(true); setFormError('')
     const res = await http.post<UsuarioResponse>('/usuarios', { email, nombreCompleto: nombre, password: pass })
     setSaving(false)
-    if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
-    setShowCreate(false); setEmail(''); setNombre(''); setPass('')
-    load()
+    if (res.error) { showError(res.error.status, res.error.mensaje, true); return }
+    setShowCreate(false); setEmail(''); setNombre(''); setPass(''); load()
   }
 
-  const openRoles = async (u: UsuarioResponse) => {
-    setShowRoles(u)
-    const res = await http.get<RolResponse[]>(`/usuarios/${u.id}/roles`)
-    if (!res.error) setUserRoles(res.data!)
+  const openAccess = async (u: UsuarioResponse) => {
+    setSelected(u); setRolId(''); setTiendaId('')
+    const [roleRes, storeRes] = await Promise.all([
+      http.get<RolResponse[]>(`/usuarios/${u.id}/roles`),
+      http.get<TiendaAsignadaResponse[]>(`/usuarios/${u.id}/tiendas`),
+    ])
+    if (roleRes.error) showError(roleRes.error.status, roleRes.error.mensaje); else setUserRoles(roleRes.data!)
+    if (storeRes.error) showError(storeRes.error.status, storeRes.error.mensaje); else setUserTiendas(storeRes.data!)
   }
 
-  const assignRole = async (userId: string, rolId: string) => {
-    const res = await http.post(`/usuarios/${userId}/roles`, { rolId })
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else { const r = await http.get<RolResponse[]>(`/usuarios/${userId}/roles`); if (!r.error) setUserRoles(r.data!) }
+  const changeStatus = async (u: UsuarioResponse) => {
+    const action = u.estado === 'ACTIVO' ? 'desactivar' : 'activar'
+    const res = await http.put<UsuarioResponse>(`/usuarios/${u.id}/${action}`)
+    if (res.error) showError(res.error.status, res.error.mensaje); else load()
   }
 
-  const removeRole = async (userId: string, rolId: string) => {
-    const res = await http.delete(`/usuarios/${userId}/roles/${rolId}`)
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else setUserRoles(p => p.filter(r => r.id !== rolId))
+  const assignRole = async () => {
+    if (!selected || !rolId) return
+    const res = await http.post(`/usuarios/${selected.id}/roles`, { rolId })
+    if (res.error) showError(res.error.status, res.error.mensaje)
+    else { const role = roles.find(r => r.id === rolId); if (role) setUserRoles(p => [...p, role]); setRolId('') }
+  }
+  const removeRole = async (id: string) => {
+    if (!selected) return
+    const res = await http.delete(`/usuarios/${selected.id}/roles/${id}`)
+    if (res.error) showError(res.error.status, res.error.mensaje); else setUserRoles(p => p.filter(r => r.id !== id))
+  }
+  const assignStore = async () => {
+    if (!selected || !tiendaId) return
+    const res = await http.post(`/usuarios/${selected.id}/tiendas`, { tiendaId })
+    if (res.error) showError(res.error.status, res.error.mensaje)
+    else { const store = tiendas.find(t => t.id === tiendaId); if (store) setUserTiendas(p => [...p, { id: store.id, nombre: store.nombre, activa: store.estado === 'ACTIVA' }]); setTiendaId('') }
+  }
+  const removeStore = async (id: string) => {
+    if (!selected) return
+    const res = await http.delete(`/usuarios/${selected.id}/tiendas/${id}`)
+    if (res.error) showError(res.error.status, res.error.mensaje); else setUserTiendas(p => p.filter(t => t.id !== id))
   }
 
-  return (
-    <>
-      <Shell title="Usuarios" banner={banner} onBannerClose={() => setBanner(null)}
-        action={<Btn variant="primary" small onClick={() => setShowCreate(true)}>+ Crear Usuario</Btn>}>
-        <div style={{ border: `1px solid ${T.rule}` }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <THead cols={['ID', 'Nombre Completo', 'Correo', 'Estado', 'Registrado', 'Acciones']} />
-            <tbody>
-              {loading ? <LoadingRow cols={6} /> : data.length === 0 ? <EmptyRow cols={6} /> :
-                data.map((u, i) => (
-                  <TRow key={u.id}>
-                    <TD mono>{u.id.slice(0, 8)}…</TD>
-                    <TD><strong style={{ fontWeight: 500 }}>{u.nombreCompleto}</strong></TD>
-                    <TD>{u.email}</TD>
-                    <TD><Badge value={u.estado} variant={u.estado === 'ACTIVO' ? 'active' : 'inactive'} /></TD>
-                    <TD mono>{fmtDate(u.creadoEn)}</TD>
-                    <td style={{ padding: '8px 16px' }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <Btn variant="ghost" small onClick={() => openRoles(u)}>Roles</Btn>
-                      </div>
-                    </td>
-                  </TRow>
-                ))}
-            </tbody>
-          </table>
+  return <>
+    <Shell title="Usuarios" banner={banner} onBannerClose={() => setBanner(null)} action={<Btn variant="primary" small onClick={() => { setFormError(''); setShowCreate(true) }}>+ Crear Usuario</Btn>}>
+      <div style={{ border: `1px solid ${T.rule}` }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <THead cols={['Correo', 'Nombre Completo', 'Estado', 'Creado', 'Acciones']} />
+        <tbody>{loading ? <LoadingRow cols={5} /> : data.length === 0 ? <EmptyRow cols={5} /> : data.map(u => <TRow key={u.id}>
+          <TD>{u.email}</TD><TD><strong style={{ fontWeight: 500 }}>{u.nombreCompleto}</strong></TD>
+          <TD><Badge value={u.estado} variant={u.estado === 'ACTIVO' ? 'active' : u.estado === 'BLOQUEADO' ? 'warn' : 'inactive'} /></TD>
+          <TD mono>{fmtDate(u.creadoEn)}</TD>
+          <td style={{ padding: '8px 16px' }}><div style={{ display: 'flex', gap: 6 }}>
+            <Btn variant="ghost" small onClick={() => openAccess(u)}>Roles y tiendas</Btn>
+            <Btn variant={u.estado === 'ACTIVO' ? 'danger' : 'ghost'} small onClick={() => changeStatus(u)}>{u.estado === 'ACTIVO' ? 'Desactivar' : 'Activar'}</Btn>
+          </div></td>
+        </TRow>)}</tbody>
+      </table></div>
+    </Shell>
+
+    {showCreate && <Modal title="Crear Usuario" onClose={() => setShowCreate(false)}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {formError && <div style={{ fontSize: 13, color: T.danger, borderLeft: `2px solid ${T.danger}`, paddingLeft: 10 }}>{formError}</div>}
+        <div><Label required>Correo Electrónico</Label><Input value={email} onChange={setEmail} type="email" maxLength={255} /></div>
+        <div><Label required>Nombre Completo</Label><Input value={nombre} onChange={setNombre} maxLength={150} /></div>
+        <div><Label required>Contraseña (12–128 caracteres)</Label><Input value={pass} onChange={setPass} type="password" maxLength={128} /></div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}><Btn variant="ghost" onClick={() => setShowCreate(false)}>Cancelar</Btn><Btn variant="primary" onClick={createUser} loading={saving}>Crear Usuario</Btn></div>
+      </div>
+    </Modal>}
+
+    {selected && <Modal title={`Accesos — ${selected.nombreCompleto}`} onClose={() => setSelected(null)} wide>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div><Label>Roles asignados</Label>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}><Select value={rolId} onChange={setRolId}><option value="">— Seleccionar rol —</option>{roles.filter(r => !userRoles.some(x => x.id === r.id)).map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}</Select><Btn small onClick={assignRole} disabled={!rolId}>Asignar</Btn></div>
+          <div style={{ border: `1px solid ${T.rule}` }}>{userRoles.length === 0 ? <div style={{ padding: 14, color: T.faint, fontSize: 12 }}>Sin roles asignados</div> : userRoles.map(r => <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', padding: 10, borderBottom: `1px solid ${T.rule}` }}><span>{r.nombre}</span><Btn variant="danger" small onClick={() => removeRole(r.id)}>Quitar</Btn></div>)}</div>
         </div>
-      </Shell>
-
-      {showCreate && (
-        <Modal title="Crear Usuario" onClose={() => setShowCreate(false)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>Nombre Completo</Label><Input value={nombre} onChange={setNombre} placeholder="Ana García" /></div>
-            <div><Label required>Correo Electrónico</Label><Input value={email} onChange={setEmail} type="email" placeholder="usuario@empresa.com" /></div>
-            <div><Label required>Contraseña (mín. 12 caracteres)</Label><Input value={pass} onChange={setPass} type="password" /></div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-              <Btn variant="ghost" onClick={() => setShowCreate(false)}>Cancelar</Btn>
-              <Btn variant="primary" onClick={createUser} loading={saving}>Crear Usuario</Btn>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {showRoles && (
-        <Modal title={`Roles — ${showRoles.nombreCompleto}`} onClose={() => setShowRoles(null)} wide>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-            <div>
-              <div style={{ fontSize: 11, letterSpacing: '0.08em', fontWeight: 600, textTransform: 'uppercase', color: T.muted, marginBottom: 12 }}>Roles Asignados</div>
-              <div style={{ border: `1px solid ${T.rule}`, minHeight: 80 }}>
-                {userRoles.length === 0 ? (
-                  <div style={{ padding: 16, fontSize: 12, color: T.faint, fontFamily: 'var(--font-mono)' }}>Sin roles asignados</div>
-                ) : userRoles.map((r, i) => (
-                  <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < userRoles.length - 1 ? `1px solid ${T.rule}` : 'none' }}>
-                    <span style={{ fontSize: 13, fontWeight: 500 }}>{r.nombre}</span>
-                    <Btn variant="danger" small onClick={() => removeRole(showRoles.id, r.id)}>Quitar</Btn>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, letterSpacing: '0.08em', fontWeight: 600, textTransform: 'uppercase', color: T.muted, marginBottom: 12 }}>Roles Disponibles</div>
-              <div style={{ border: `1px solid ${T.rule}`, minHeight: 80 }}>
-                {roles.filter(r => !userRoles.find(ur => ur.id === r.id)).map((r, i, arr) => (
-                  <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: i < arr.length - 1 ? `1px solid ${T.rule}` : 'none' }}>
-                    <span style={{ fontSize: 13 }}>{r.nombre}</span>
-                    <Btn variant="ghost" small onClick={() => assignRole(showRoles.id, r.id)}>Asignar</Btn>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
-            <Btn variant="ghost" onClick={() => setShowRoles(null)}>Cerrar</Btn>
-          </div>
-        </Modal>
-      )}
-    </>
-  )
+        <div><Label>Tiendas asignadas</Label>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}><Select value={tiendaId} onChange={setTiendaId}><option value="">— Seleccionar tienda —</option>{tiendas.filter(t => !userTiendas.some(x => x.id === t.id)).map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}</Select><Btn small onClick={assignStore} disabled={!tiendaId}>Asignar</Btn></div>
+          <div style={{ border: `1px solid ${T.rule}` }}>{userTiendas.length === 0 ? <div style={{ padding: 14, color: T.faint, fontSize: 12 }}>Sin tiendas asignadas</div> : userTiendas.map(t => <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 10, borderBottom: `1px solid ${T.rule}` }}><span>{t.nombre} <Badge value={t.activa ? 'ACTIVA' : 'INACTIVA'} variant={t.activa ? 'active' : 'inactive'} /></span><Btn variant="danger" small onClick={() => removeStore(t.id)}>Quitar</Btn></div>)}</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}><Btn variant="ghost" onClick={() => setSelected(null)}>Cerrar</Btn></div>
+    </Modal>}
+  </>
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -745,6 +755,7 @@ function RolesView() {
   const [editRol, setEditRol] = useState<RolResponse | null>(null)
   const [nombre, setNombre] = useState('')
   const [desc, setDesc] = useState('')
+  const [scopeId, setScopeId] = useState('')
   const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
@@ -770,6 +781,7 @@ function RolesView() {
     if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
     const sc = allScopes.find(s => s.id === scopeId)!
     setRolScopes(p => [...p, sc])
+    setScopeId('')
   }
 
   const removeScope = async (scopeId: string) => {
@@ -831,8 +843,8 @@ function RolesView() {
                       <div style={{ fontSize: 11, opacity: 0.65, marginTop: 2, lineHeight: 1.4 }}>{r.descripcion}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-                      <button onClick={() => openEdit(r)} style={iconBtn(selected?.id === r.id ? T.canvas : T.muted)}>✎</button>
-                      <button onClick={() => deleteRol(r.id)} style={iconBtn(selected?.id === r.id ? '#FCA5A5' : T.danger)}>✕</button>
+                      <button onClick={() => openEdit(r)} style={iconBtn(selected?.id === r.id ? T.canvas : T.muted)}>Editar</button>
+                      <button onClick={() => deleteRol(r.id)} style={iconBtn(selected?.id === r.id ? '#FCA5A5' : T.danger)}>Eliminar</button>
                     </div>
                   </div>
                 </div>
@@ -865,20 +877,12 @@ function RolesView() {
                     }
                     <HR />
                     <div style={{ fontSize: 11, letterSpacing: '0.08em', fontWeight: 600, textTransform: 'uppercase', color: T.muted, margin: '12px 0 10px' }}>Scopes Disponibles</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {allScopes.filter(s => !rolScopes.find(rs => rs.id === s.id)).map(s => (
-                        <button
-                          key={s.id}
-                          onClick={() => assignScope(s.id)}
-                          style={{ fontFamily: 'var(--font-mono)', fontSize: 12, border: `1px solid ${T.rule}`, background: 'transparent', color: T.muted, padding: '4px 10px', cursor: 'pointer', transition: 'all .15s' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = T.ink; e.currentTarget.style.color = T.ink }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = T.rule; e.currentTarget.style.color = T.muted }}
-                        >
-                          + {s.codigo}
-                        </button>
-                      ))}
-                      {allScopes.filter(s => !rolScopes.find(rs => rs.id === s.id)).length === 0 &&
-                        <span style={{ fontSize: 12, color: T.faint, fontFamily: 'var(--font-mono)' }}>Todos los scopes asignados</span>}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Select value={scopeId} onChange={setScopeId}>
+                        <option value="">— Seleccionar scope —</option>
+                        {allScopes.filter(s => !rolScopes.find(rs => rs.id === s.id)).map(s => <option key={s.id} value={s.id}>{s.codigo}</option>)}
+                      </Select>
+                      <Btn small disabled={!scopeId} onClick={() => assignScope(scopeId)}>Asignar</Btn>
                     </div>
                   </div>
                 </div>
@@ -895,8 +899,8 @@ function RolesView() {
       {showCreate && (
         <Modal title={editRol ? 'Editar Rol' : 'Nuevo Rol'} onClose={() => { setShowCreate(false); setEditRol(null) }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>Nombre del Rol</Label><Input value={nombre} onChange={setNombre} placeholder="OPERADOR" /></div>
-            <div><Label>Descripción</Label><Textarea value={desc} onChange={setDesc} placeholder="Descripción del rol y sus responsabilidades" rows={3} /></div>
+            <div><Label required>Nombre del Rol</Label><Input value={nombre} onChange={setNombre} placeholder="OPERADOR" maxLength={100} /></div>
+            <div><Label>Descripción</Label><Textarea value={desc} onChange={setDesc} placeholder="Descripción del rol y sus responsabilidades" rows={3} maxLength={255} /></div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
               <Btn variant="ghost" onClick={() => { setShowCreate(false); setEditRol(null) }}>Cancelar</Btn>
               <Btn variant="primary" onClick={saveRol} loading={saving}>{editRol ? 'Guardar Cambios' : 'Crear Rol'}</Btn>
@@ -909,7 +913,7 @@ function RolesView() {
 }
 
 function iconBtn(color: string): React.CSSProperties {
-  return { background: 'none', border: 'none', cursor: 'pointer', color, fontSize: 13, padding: '2px 4px', lineHeight: 1 }
+  return { background: 'none', border: 'none', cursor: 'pointer', color, fontSize: 11, padding: '2px 4px', lineHeight: 1 }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -992,8 +996,8 @@ function ScopesView() {
       {showForm && (
         <Modal title={edit ? 'Editar Scope' : 'Nuevo Scope'} onClose={() => { setShowForm(false); setEdit(null) }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>Código</Label><Input value={codigo} onChange={setCodigo} mono placeholder="catalogo:administrar" /></div>
-            <div><Label>Descripción</Label><Input value={desc} onChange={setDesc} placeholder="Administrar el catálogo de productos" /></div>
+            <div><Label required>Código</Label><Input value={codigo} onChange={setCodigo} mono placeholder="catalogo:administrar" maxLength={100} /></div>
+            <div><Label>Descripción</Label><Input value={desc} onChange={setDesc} placeholder="Administrar el catálogo de productos" maxLength={255} /></div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}>
               <input type="checkbox" checked={sensible} onChange={e => setSensible(e.target.checked)}
                 style={{ width: 14, height: 14, accentColor: T.ink }} />
@@ -1016,6 +1020,7 @@ function ScopesView() {
 
 function CategoriasView() {
   const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<CategoriaResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<AppBanner | null>(null)
@@ -1026,11 +1031,11 @@ function CategoriasView() {
 
   const load = useCallback(async (p: number) => {
     setLoading(true)
-    const res = await http.get<SpringPage<CategoriaResponse>>(`/categorias?page=${p}&size=10&sort=nombre,asc`)
+    const res = await http.get<SpringPage<CategoriaResponse>>(`/categorias?page=${p}&size=${size}&sort=nombre,asc`)
     setLoading(false)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
     else setPageData(res.data!)
-  }, [])
+  }, [size])
 
   useEffect(() => { load(page) }, [load, page])
 
@@ -1042,13 +1047,14 @@ function CategoriasView() {
       : await http.post<CategoriaResponse>('/categorias', { nombre })
     setSaving(false)
     if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
+    categoriasCache.upsert(res.data!)
     setShowForm(false); setEdit(null); setNombre(''); load(page)
   }
 
   const del = async (id: string) => {
     const res = await http.delete(`/categorias/${id}`)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+    else { categoriasCache.remove(id); load(page) }
   }
 
   return (
@@ -1057,12 +1063,11 @@ function CategoriasView() {
         action={<Btn variant="primary" small onClick={() => { setEdit(null); setNombre(''); setShowForm(true) }}>+ Nueva Categoría</Btn>}>
         <div style={{ border: `1px solid ${T.rule}` }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <THead cols={['ID', 'Nombre', 'Acciones']} />
+            <THead cols={['Nombre', 'Acciones']} />
             <tbody>
-              {loading ? <LoadingRow cols={3} /> : pageData.content.length === 0 ? <EmptyRow cols={3} /> :
+              {loading ? <LoadingRow cols={2} /> : pageData.content.length === 0 ? <EmptyRow cols={2} /> :
                 pageData.content.map(c => (
                   <TRow key={c.id}>
-                    <TD mono>{c.id.slice(0, 8)}…</TD>
                     <TD><strong style={{ fontWeight: 500 }}>{c.nombre}</strong></TD>
                     <td style={{ padding: '8px 16px' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
@@ -1074,14 +1079,14 @@ function CategoriasView() {
                 ))}
             </tbody>
           </table>
-          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => { setPage(p); load(p) }} />
+          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => setPage(p)} onSize={next => { setPage(0); setSize(next) }} />
         </div>
       </Shell>
 
       {showForm && (
         <Modal title={edit ? 'Editar Categoría' : 'Nueva Categoría'} onClose={() => { setShowForm(false); setEdit(null) }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>Nombre de Categoría</Label><Input value={nombre} onChange={setNombre} placeholder="Camisas" /></div>
+            <div><Label required>Nombre de Categoría</Label><Input value={nombre} onChange={setNombre} placeholder="Camisas" maxLength={150} /></div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
               <Btn variant="ghost" onClick={() => { setShowForm(false); setEdit(null) }}>Cancelar</Btn>
               <Btn variant="primary" onClick={save} loading={saving}>{edit ? 'Guardar' : 'Crear'}</Btn>
@@ -1099,6 +1104,7 @@ function CategoriasView() {
 
 function TemplatesView() {
   const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<TemplateResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
   const [cats, setCats] = useState<CategoriaResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -1111,33 +1117,34 @@ function TemplatesView() {
   const load = useCallback(async (p: number) => {
     setLoading(true)
     const [r, c] = await Promise.all([
-      http.get<SpringPage<TemplateResponse>>(`/templates?page=${p}&size=10`),
+      http.get<SpringPage<TemplateResponse>>(`/templates?page=${p}&size=${size}`),
       http.get<SpringPage<CategoriaResponse>>('/categorias?page=0&size=100'),
     ])
     setLoading(false)
     if (r.error) setBanner({ status: r.error.status as HttpStatus, mensaje: r.error.mensaje })
     else setPageData(r.data!)
     if (!c.error) setCats(c.data!.content)
-  }, [])
+  }, [size])
 
   useEffect(() => { load(page) }, [load, page])
 
   const save = async () => {
     if (!f.nombre || !f.categoriaId) return
     setSaving(true)
-    const body = { nombre: f.nombre, temporada: f.temporada || null, proveedor: f.proveedor || null, precioBase: f.precioBase ? parseFloat(f.precioBase) : null, categoriaId: f.categoriaId }
+    const commonBody = { nombre: f.nombre, temporada: f.temporada || null, proveedor: f.proveedor || null, precioBase: f.precioBase ? parseFloat(f.precioBase) : null }
     const res = edit
-      ? await http.put<TemplateResponse>(`/templates/${edit.id}`, body)
-      : await http.post<TemplateResponse>('/templates', body)
+      ? await http.put<TemplateResponse>(`/templates/${edit.id}`, commonBody)
+      : await http.post<TemplateResponse>('/templates', { ...commonBody, categoriaId: f.categoriaId })
     setSaving(false)
     if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
+    templatesCache.upsert(res.data!)
     setShowForm(false); setEdit(null); setF({ nombre: '', temporada: '', proveedor: '', precioBase: '', categoriaId: '' }); load(page)
   }
 
   const del = async (id: string) => {
     const res = await http.delete(`/templates/${id}`)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+    else { templatesCache.remove(id); load(page) }
   }
 
   const openEdit = (t: TemplateResponse) => {
@@ -1151,14 +1158,13 @@ function TemplatesView() {
         action={<Btn variant="primary" small onClick={() => { setEdit(null); setF({ nombre: '', temporada: '', proveedor: '', precioBase: '', categoriaId: cats[0]?.id ?? '' }); setShowForm(true) }}>+ Nuevo Template</Btn>}>
         <div style={{ border: `1px solid ${T.rule}` }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <THead cols={['ID', 'Nombre', 'Temporada', 'Proveedor', 'Precio Base', 'Categoría', 'Acciones']} />
+            <THead cols={['Nombre', 'Temporada', 'Proveedor', 'Precio Base', 'Categoría', 'Acciones']} />
             <tbody>
-              {loading ? <LoadingRow cols={7} /> : pageData.content.length === 0 ? <EmptyRow cols={7} /> :
+              {loading ? <LoadingRow cols={6} /> : pageData.content.length === 0 ? <EmptyRow cols={6} /> :
                 pageData.content.map(t => {
-                  const catNombre = cats.find(c => c.id === t.categoriaId)?.nombre ?? t.categoriaId.slice(0, 8) + '…'
+                  const catNombre = cats.find(c => c.id === t.categoriaId)?.nombre ?? 'Categoría no disponible'
                   return (
                   <TRow key={t.id}>
-                    <TD mono>{t.id.slice(0, 8)}…</TD>
                     <TD><strong style={{ fontWeight: 500 }}>{t.nombre}</strong></TD>
                     <TD>{t.temporada ?? <span style={{ color: T.faint }}>—</span>}</TD>
                     <TD>{t.proveedor ?? <span style={{ color: T.faint }}>—</span>}</TD>
@@ -1174,20 +1180,20 @@ function TemplatesView() {
                 )})}
             </tbody>
           </table>
-          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => { setPage(p); load(p) }} />
+          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => setPage(p)} onSize={next => { setPage(0); setSize(next) }} />
         </div>
       </Shell>
 
       {showForm && (
         <Modal title={edit ? 'Editar Template' : 'Nuevo Template'} onClose={() => { setShowForm(false); setEdit(null) }} wide>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ gridColumn: '1/-1' }}><Label required>Nombre del Template</Label><Input value={f.nombre} onChange={v => setF(p => ({ ...p, nombre: v }))} placeholder="Camisa básica" /></div>
-            <div><Label>Temporada</Label><Input value={f.temporada} onChange={v => setF(p => ({ ...p, temporada: v }))} placeholder="2026-Otoño" /></div>
-            <div><Label>Proveedor</Label><Input value={f.proveedor} onChange={v => setF(p => ({ ...p, proveedor: v }))} placeholder="Proveedor Textil" /></div>
+            <div style={{ gridColumn: '1/-1' }}><Label required>Nombre del Template</Label><Input value={f.nombre} onChange={v => setF(p => ({ ...p, nombre: v }))} placeholder="Camisa básica" maxLength={200} /></div>
+            <div><Label>Temporada</Label><Input value={f.temporada} onChange={v => setF(p => ({ ...p, temporada: v }))} placeholder="2026-Otoño" maxLength={50} /></div>
+            <div><Label>Proveedor</Label><Input value={f.proveedor} onChange={v => setF(p => ({ ...p, proveedor: v }))} placeholder="Proveedor Textil" maxLength={150} /></div>
             <div><Label>Precio Base</Label><Input value={f.precioBase} onChange={v => setF(p => ({ ...p, precioBase: v }))} placeholder="89900.00" /></div>
             <div>
               <Label required>Categoría</Label>
-              <Select value={f.categoriaId} onChange={v => setF(p => ({ ...p, categoriaId: v }))}>
+              <Select value={f.categoriaId} onChange={v => setF(p => ({ ...p, categoriaId: v }))} disabled={Boolean(edit)}>
                 <option value="">— Seleccionar —</option>
                 {cats.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </Select>
@@ -1209,15 +1215,19 @@ function TemplatesView() {
 
 function VariantesView() {
   const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<VarianteResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
   const [templates, setTemplates] = useState<TemplateResponse[]>([])
-  const [skuSearch, setSkuSearch] = useState('')
+  const [selectedVariantId, setSelectedVariantId] = useState('')
+  const [catalogs, setCatalogs] = useState<Catalogs | null>(null)
   const [skuResult, setSkuResult] = useState<VarianteResponse | null | 'notfound'>(null)
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<AppBanner | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [edit, setEdit] = useState<VarianteResponse | null>(null)
   const [f, setF] = useState({ sku: '', talla: '', color: '', templateId: '' })
+  // Mientras el usuario no toque el SKU, cambiar de template lo vuelve a generar
+  const [skuEditado, setSkuEditado] = useState(false)
   const [saving, setSaving] = useState(false)
   const [skuLoading, setSkuLoading] = useState(false)
 
@@ -1228,49 +1238,60 @@ function VariantesView() {
 
   const load = useCallback(async (p: number) => {
     setLoading(true)
-    const res = await http.get<SpringPage<VarianteResponse>>(`/variantes?page=${p}&size=10`)
+    const res = await http.get<SpringPage<VarianteResponse>>(`/variantes?page=${p}&size=${size}`)
     setLoading(false)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
     else setPageData(res.data!)
-  }, [])
+  }, [size])
 
-  useEffect(() => { load(page); loadTemplates() }, [load, loadTemplates, page])
+  useEffect(() => { load(page); loadTemplates(); loadVariantCatalog().then(setCatalogs).catch(() => undefined) }, [load, loadTemplates, page])
 
-  const templateName = (id: string) => templates.find(t => t.id === id)?.nombre ?? id.slice(0, 8) + '…'
+  const templateName = (id: string) => templates.find(t => t.id === id)?.nombre ?? 'Template no disponible'
 
   const searchBySku = async () => {
-    if (!skuSearch.trim()) return
+    const selected = catalogs?.variantesById.get(selectedVariantId)
+    if (!selected) return
     setSkuLoading(true)
-    const res = await http.get<VarianteResponse>(`/variantes/sku/${encodeURIComponent(skuSearch.trim())}`)
+    const res = await http.get<VarianteResponse>(`/variantes/sku/${encodeURIComponent(selected.sku)}`)
     setSkuLoading(false)
-    if (res.error) setSkuResult('notfound')
+    if (res.error?.status === 404) setSkuResult('notfound')
+    else if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
     else setSkuResult(res.data!)
   }
 
   const save = async () => {
-    if (!f.sku || !f.templateId) return
+    if (!f.sku.trim() || !f.templateId) return
     setSaving(true)
-    const body = { sku: f.sku, talla: f.talla || null, color: f.color || null, templateId: f.templateId }
+    const body = { sku: f.sku.trim(), talla: f.talla || null, color: f.color || null, templateId: f.templateId }
     const res = edit
       ? await http.put<VarianteResponse>(`/variantes/${edit.id}`, body)
       : await http.post<VarianteResponse>('/variantes', body)
     setSaving(false)
     if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
+    variantesCache.upsert(res.data!)
+    loadVariantCatalog().then(setCatalogs).catch(() => undefined)
     setShowForm(false); setEdit(null); setF({ sku: '', talla: '', color: '', templateId: '' }); load(page)
   }
 
   const del = async (id: string) => {
     const res = await http.delete(`/variantes/${id}`)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+    else { variantesCache.remove(id); loadVariantCatalog().then(setCatalogs).catch(() => undefined); load(page) }
   }
 
   const openEdit = (v: VarianteResponse) => {
-    setEdit(v); setF({ sku: v.sku, talla: v.talla ?? '', color: v.color ?? '', templateId: v.templateId }); setShowForm(true)
+    setEdit(v); setF({ sku: v.sku, talla: v.talla ?? '', color: v.color ?? '', templateId: v.templateId }); setSkuEditado(true); setShowForm(true)
+  }
+
+  const generateSku = (templateId: string) => {
+    const prefix = (templates.find(template => template.id === templateId)?.nombre ?? 'VARIANTE')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
+    return `${prefix || 'VARIANTE'}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`.slice(0, 60)
   }
 
   const openCreate = () => {
-    setEdit(null); setF({ sku: '', talla: '', color: '', templateId: templates[0]?.id ?? '' }); setShowForm(true)
+    const templateId = templates[0]?.id ?? ''
+    setEdit(null); setF({ sku: templateId ? generateSku(templateId) : '', talla: '', color: '', templateId }); setSkuEditado(false); setShowForm(true)
   }
 
   return (
@@ -1285,13 +1306,13 @@ function VariantesView() {
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: skuResult ? 12 : 0 }}>
             <div style={{ flex: 1 }}>
-              <Input value={skuSearch} onChange={setSkuSearch} mono placeholder="CAM-BAS-001" />
+              {catalogs ? <VarianteSelector value={selectedVariantId} onChange={setSelectedVariantId} catalogs={catalogs} label="SKU" /> : <div style={{ color: T.faint }}>Cargando catálogo…</div>}
             </div>
             <Btn variant="primary" onClick={searchBySku} loading={skuLoading}>Buscar SKU</Btn>
-            {skuResult && <Btn variant="ghost" onClick={() => { setSkuResult(null); setSkuSearch('') }}>Limpiar</Btn>}
+            {skuResult && <Btn variant="ghost" onClick={() => { setSkuResult(null); setSelectedVariantId('') }}>Limpiar</Btn>}
           </div>
           {skuResult === 'notfound' && (
-            <div style={{ fontSize: 13, color: T.danger, borderLeft: `2px solid ${T.danger}`, paddingLeft: 10, marginTop: 8 }}>SKU no encontrado.</div>
+            <div style={{ fontSize: 13, color: T.danger, borderLeft: `2px solid ${T.danger}`, paddingLeft: 10, marginTop: 8 }}>No encontrado</div>
           )}
           {skuResult && skuResult !== 'notfound' && (
             <div style={{ marginTop: 8, padding: '12px 14px', border: `1px solid ${T.ink}`, background: T.canvas }}>
@@ -1334,24 +1355,31 @@ function VariantesView() {
                 ))}
             </tbody>
           </table>
-          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => { setPage(p); load(p) }} />
+          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => setPage(p)} onSize={next => { setPage(0); setSize(next) }} />
         </div>
       </Shell>
 
       {showForm && (
         <Modal title={edit ? 'Editar Variante' : 'Nueva Variante'} onClose={() => { setShowForm(false); setEdit(null) }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>SKU</Label><Input value={f.sku} onChange={v => setF(p => ({ ...p, sku: v }))} mono placeholder="CAM-BAS-001" /></div>
+            <div>
+              <Label required>SKU</Label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}><Input value={f.sku} onChange={v => { setSkuEditado(true); setF(p => ({ ...p, sku: v })) }} mono maxLength={60} /></div>
+                <Btn variant="ghost" small disabled={!f.templateId} onClick={() => { setSkuEditado(false); setF(p => ({ ...p, sku: generateSku(p.templateId) })) }}>Generar</Btn>
+              </div>
+              {!edit && <div style={{ fontSize: 11, color: T.faint, marginTop: 5 }}>Se genera a partir del template; puedes cambiarlo.</div>}
+            </div>
             <div>
               <Label required>Template</Label>
-              <Select value={f.templateId} onChange={v => setF(p => ({ ...p, templateId: v }))}>
+              <Select value={f.templateId} onChange={v => setF(p => ({ ...p, templateId: v, sku: skuEditado || !v ? p.sku : generateSku(v) }))}>
                 <option value="">— Seleccionar template —</option>
                 {templates.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
               </Select>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div><Label>Talla</Label><Input value={f.talla} onChange={v => setF(p => ({ ...p, talla: v }))} placeholder="M" /></div>
-              <div><Label>Color</Label><Input value={f.color} onChange={v => setF(p => ({ ...p, color: v }))} placeholder="Negro" /></div>
+              <div><Label>Talla</Label><Input value={f.talla} onChange={v => setF(p => ({ ...p, talla: v }))} placeholder="M" maxLength={20} /></div>
+              <div><Label>Color</Label><Input value={f.color} onChange={v => setF(p => ({ ...p, color: v }))} placeholder="Negro" maxLength={50} /></div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
               <Btn variant="ghost" onClick={() => { setShowForm(false); setEdit(null) }}>Cancelar</Btn>
@@ -1370,95 +1398,114 @@ function VariantesView() {
 
 function TiendasView() {
   const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<TiendaResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<AppBanner | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [edit, setEdit] = useState<TiendaResponse | null>(null)
+  const [detail, setDetail] = useState<TiendaConNodosResponse | null>(null)
+  const [centros, setCentros] = useState<CentroDistribucionResponse[]>([])
+  const [prioridad, setPrioridad] = useState<PrioridadTiendaCdResponse[]>([])
   const [nombre, setNombre] = useState('')
   const [ubicacion, setUbicacion] = useState('')
   const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
 
   const load = useCallback(async (p: number) => {
     setLoading(true)
-    const res = await http.get<SpringPage<TiendaResponse>>(`/tiendas?page=${p}&size=10`)
+    const res = await http.get<SpringPage<TiendaResponse>>(`/tiendas?page=${p}&size=${size}`)
     setLoading(false)
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else setPageData(res.data!)
-  }, [])
-
+    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); else setPageData(res.data!)
+  }, [size])
   useEffect(() => { load(page) }, [load, page])
 
-  const deactivate = async (id: string) => {
-    const res = await http.delete(`/tiendas/${id}`)
+  const changeStatus = async (store: TiendaResponse) => {
+    const res = store.estado === 'ACTIVA' ? await http.delete(`/tiendas/${store.id}`) : await http.put<TiendaResponse>(`/tiendas/${store.id}/activar`)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+    else { tiendasCache.upsert(res.data ?? { ...store, estado: 'INACTIVA' }); load(page) }
   }
 
-  const activate = async (id: string) => {
-    const res = await http.put<TiendaResponse>(`/tiendas/${id}/activar`)
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
+  const openDetail = async (id: string) => {
+    const [store, priorities, cds] = await Promise.all([
+      http.get<TiendaConNodosResponse>(`/tiendas/${id}`),
+      http.get<PrioridadTiendaCdResponse[]>(`/tiendas/${id}/prioridad-cd`),
+      http.get<SpringPage<CentroDistribucionResponse>>('/centros-distribucion?page=0&size=200'),
+    ])
+    if (store.error) { setBanner({ status: store.error.status as HttpStatus, mensaje: store.error.mensaje }); return }
+    setDetail(store.data!); setPrioridad(priorities.error ? [] : priorities.data!); setCentros(cds.error ? [] : cds.data!.content)
   }
 
   const save = async () => {
-    if (!nombre) return
-    setSaving(true)
+    if (!nombre) { setFormError('El nombre es obligatorio.'); return }
+    setSaving(true); setFormError('')
     const body = { nombre, ubicacion }
-    const res = edit
-      ? await http.put<TiendaResponse>(`/tiendas/${edit.id}`, body)
-      : await http.post<TiendaResponse>('/tiendas', body)
+    const res = edit ? await http.put<TiendaResponse>(`/tiendas/${edit.id}`, body) : await http.post<TiendaConNodosResponse>('/tiendas', body)
     setSaving(false)
-    if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
+    if (res.error) {
+      if (res.error.status === 400) setFormError(res.error.mensaje); else setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
+      return
+    }
+    tiendasCache.upsert(res.data!)
     setShowForm(false); setEdit(null); setNombre(''); setUbicacion(''); load(page)
+    if (!edit) openDetail(res.data!.id)
   }
 
-  return (
-    <>
-      <Shell title="Gestión de Tiendas" banner={banner} onBannerClose={() => setBanner(null)}
-        action={<Btn variant="primary" small onClick={() => { setEdit(null); setNombre(''); setUbicacion(''); setShowForm(true) }}>+ Nueva Tienda</Btn>}>
-        <div style={{ border: `1px solid ${T.rule}` }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <THead cols={['ID', 'Nombre', 'Ubicación', 'Estado', 'Actualizado', 'Acciones']} />
-            <tbody>
-              {loading ? <LoadingRow cols={6} /> : pageData.content.length === 0 ? <EmptyRow cols={6} /> :
-                pageData.content.map(s => (
-                  <TRow key={s.id}>
-                    <TD mono>{s.id.slice(0, 8)}…</TD>
-                    <TD><strong style={{ fontWeight: 500 }}>{s.nombre}</strong></TD>
-                    <TD>{s.ubicacion}</TD>
-                    <TD><Badge value={s.estado} variant={s.estado === 'ACTIVA' ? 'active' : 'inactive'} /></TD>
-                    <TD mono>{fmtDate(s.actualizadoEn)}</TD>
-                    <td style={{ padding: '8px 16px' }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <Btn variant="ghost" small onClick={() => { setEdit(s); setNombre(s.nombre); setUbicacion(s.ubicacion); setShowForm(true) }}>Editar</Btn>
-                        {s.estado === 'ACTIVA'
-                          ? <Btn variant="danger" small onClick={() => deactivate(s.id)}>Desactivar</Btn>
-                          : <Btn variant="ghost" small onClick={() => activate(s.id)}>Reactivar</Btn>}
-                      </div>
-                    </td>
-                  </TRow>
-                ))}
-            </tbody>
-          </table>
-          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => { setPage(p); load(p) }} />
-        </div>
-      </Shell>
+  const movePriority = (index: number, direction: -1 | 1) => {
+    const next = [...prioridad]; const target = index + direction
+    if (target < 0 || target >= next.length) return
+    ;[next[index], next[target]] = [next[target], next[index]]
+    setPrioridad(next.map((item, i) => ({ ...item, ordenPrioridad: i + 1 })))
+  }
+  const addPriority = (cdId: string) => {
+    if (!detail || !cdId || prioridad.some(p => p.cdId === cdId)) return
+    setPrioridad(p => [...p, { id: `local-${cdId}`, tiendaId: detail.id, cdId, ordenPrioridad: p.length + 1 }])
+  }
+  const savePriority = async () => {
+    if (!detail) return
+    const res = await http.put<PrioridadTiendaCdResponse[]>(`/tiendas/${detail.id}/prioridad-cd`, { cdIds: prioridad.map(p => p.cdId) })
+    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); else setPrioridad(res.data!)
+  }
+  const cdName = (id: string) => centros.find(c => c.id === id)?.nombre ?? 'Centro no disponible'
 
-      {showForm && (
-        <Modal title={edit ? 'Editar Tienda' : 'Nueva Tienda'} onClose={() => { setShowForm(false); setEdit(null) }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>Nombre de Tienda</Label><Input value={nombre} onChange={setNombre} placeholder="Tienda Centro" /></div>
-            <div><Label>Ubicación</Label><Input value={ubicacion} onChange={setUbicacion} placeholder="Bogotá" /></div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-              <Btn variant="ghost" onClick={() => { setShowForm(false); setEdit(null) }}>Cancelar</Btn>
-              <Btn variant="primary" onClick={save} loading={saving}>{edit ? 'Guardar' : 'Crear'}</Btn>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </>
-  )
+  return <>
+    <Shell title="Gestión de Tiendas" banner={banner} onBannerClose={() => setBanner(null)} action={<Btn variant="primary" small onClick={() => { setEdit(null); setNombre(''); setUbicacion(''); setFormError(''); setShowForm(true) }}>+ Nueva Tienda</Btn>}>
+      <div style={{ border: `1px solid ${T.rule}` }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <THead cols={['Nombre', 'Ubicación', 'Estado', 'Acciones']} />
+        <tbody>{loading ? <LoadingRow cols={4} /> : pageData.content.length === 0 ? <EmptyRow cols={4} /> : pageData.content.map(store => <TRow key={store.id}>
+          <TD><strong style={{ fontWeight: 500 }}>{store.nombre}</strong></TD><TD>{store.ubicacion || '—'}</TD>
+          <TD><Badge value={store.estado} variant={store.estado === 'ACTIVA' ? 'active' : 'inactive'} /></TD>
+          <td style={{ padding: '8px 16px' }}><div style={{ display: 'flex', gap: 6 }}>
+            <Btn variant="ghost" small onClick={() => openDetail(store.id)}>Detalle</Btn>
+            <Btn variant="ghost" small onClick={() => { setEdit(store); setNombre(store.nombre); setUbicacion(store.ubicacion); setFormError(''); setShowForm(true) }}>Editar</Btn>
+            <Btn variant={store.estado === 'ACTIVA' ? 'danger' : 'ghost'} small onClick={() => changeStatus(store)}>{store.estado === 'ACTIVA' ? 'Desactivar' : 'Activar'}</Btn>
+          </div></td>
+        </TRow>)}</tbody>
+      </table><Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={setPage} onSize={next => { setPage(0); setSize(next) }} /></div>
+    </Shell>
+
+    {showForm && <Modal title={edit ? 'Editar Tienda' : 'Nueva Tienda'} onClose={() => setShowForm(false)}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {formError && <div style={{ fontSize: 13, color: T.danger, borderLeft: `2px solid ${T.danger}`, paddingLeft: 10 }}>{formError}</div>}
+        <div><Label required>Nombre</Label><Input value={nombre} onChange={setNombre} maxLength={150} /></div>
+        <div><Label>Ubicación</Label><Input value={ubicacion} onChange={setUbicacion} maxLength={255} /></div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}><Btn variant="ghost" onClick={() => setShowForm(false)}>Cancelar</Btn><Btn onClick={save} loading={saving}>Guardar</Btn></div>
+      </div>
+    </Modal>}
+
+    {detail && <Modal title={`Detalle — ${detail.nombre}`} onClose={() => setDetail(null)} wide>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
+        <div style={{ border: `1px solid ${T.rule}`, padding: 14 }}><Label>Nodo almacén</Label><Mono>{detail.almacenId}</Mono></div>
+        <div style={{ border: `1px solid ${T.rule}`, padding: 14 }}><Label>Nodo bodega</Label><Mono>{detail.bodegaId}</Mono></div>
+      </div>
+      <Label>Prioridad de centros</Label>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}><Select value="" onChange={addPriority}><option value="">— Añadir centro —</option>{centros.filter(c => !prioridad.some(p => p.cdId === c.id)).map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}</Select></div>
+      <div style={{ border: `1px solid ${T.rule}` }}>{prioridad.length === 0 ? <div style={{ padding: 14, color: T.faint }}>Sin centros priorizados</div> : prioridad.map((item, index) => <div key={item.cdId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 10, borderBottom: `1px solid ${T.rule}` }}>
+        <span><Mono>{index + 1}</Mono> &nbsp; {cdName(item.cdId)}</span><div style={{ display: 'flex', gap: 5 }}><Btn variant="ghost" small disabled={index === 0} onClick={() => movePriority(index, -1)}>Subir</Btn><Btn variant="ghost" small disabled={index === prioridad.length - 1} onClick={() => movePriority(index, 1)}>Bajar</Btn><Btn variant="danger" small onClick={() => setPrioridad(p => p.filter(x => x.cdId !== item.cdId))}>Quitar</Btn></div>
+      </div>)}</div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 18 }}><Btn variant="ghost" onClick={() => setDetail(null)}>Cerrar</Btn><Btn onClick={savePriority}>Guardar prioridad</Btn></div>
+    </Modal>}
+  </>
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1467,6 +1514,7 @@ function TiendasView() {
 
 function CentrosView() {
   const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<CentroDistribucionResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
   const [filters, setFilters] = useState({ id: '', nombre: '', ubicacion: '' })
   const [loading, setLoading] = useState(true)
@@ -1479,7 +1527,7 @@ function CentrosView() {
   const [saving, setSaving] = useState(false)
 
   const buildQuery = (p: number, f = filters) => {
-    const params = new URLSearchParams({ page: String(p), size: '10' })
+    const params = new URLSearchParams({ page: String(p), size: String(size) })
     if (f.id) params.set('id', f.id)
     if (f.nombre) params.set('nombre', f.nombre)
     if (f.ubicacion) params.set('ubicacion', f.ubicacion)
@@ -1492,7 +1540,7 @@ function CentrosView() {
     setLoading(false)
     if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
     else setPageData(res.data!)
-  }, [])
+  }, [size])
 
   useEffect(() => { load(page) }, [load, page])
 
@@ -1559,11 +1607,9 @@ function CentrosView() {
               </div>
             ))}
         </div>
-        {pageData.totalPages > 1 && (
-          <div style={{ border: `1px solid ${T.rule}`, marginTop: 14 }}>
-            <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => { setPage(p); load(p) }} />
-          </div>
-        )}
+        <div style={{ border: `1px solid ${T.rule}`, marginTop: 14 }}>
+          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => setPage(p)} onSize={next => { setPage(0); setSize(next) }} />
+        </div>
       </Shell>
 
       {detail && (
@@ -1598,8 +1644,8 @@ function CentrosView() {
       {showForm && (
         <Modal title={edit ? 'Editar Centro' : 'Nuevo Centro de Distribución'} onClose={() => { setShowForm(false); setEdit(null) }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div><Label required>Nombre</Label><Input value={nombre} onChange={setNombre} placeholder="CD Principal" /></div>
-            <div><Label>Ubicación</Label><Input value={ubicacion} onChange={setUbicacion} placeholder="Bogotá" /></div>
+            <div><Label required>Nombre</Label><Input value={nombre} onChange={setNombre} placeholder="CD Principal" maxLength={150} /></div>
+            <div><Label>Ubicación</Label><Input value={ubicacion} onChange={setUbicacion} placeholder="Bogotá" maxLength={255} /></div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
               <Btn variant="ghost" onClick={() => { setShowForm(false); setEdit(null) }}>Cancelar</Btn>
               <Btn variant="primary" onClick={save} loading={saving}>{edit ? 'Guardar' : 'Crear'}</Btn>
@@ -1617,114 +1663,53 @@ function CentrosView() {
 
 function BodegasView() {
   const [page, setPage] = useState(0)
+  const [size, setSize] = useState(10)
   const [pageData, setPageData] = useState<SpringPage<BodegaTiendaResponse>>({ content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 })
-  const [tiendas, setTiendas] = useState<TiendaResponse[]>([])
+  const [tiendas, setTiendas] = useState<Map<string, TiendaResponse>>(new Map())
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<AppBanner | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [edit, setEdit] = useState<BodegaTiendaResponse | null>(null)
-  const [tiendaId, setTiendaId] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const loadTiendas = useCallback(async () => {
-    const res = await http.get<SpringPage<TiendaResponse>>('/tiendas?page=0&size=200')
-    if (!res.error) setTiendas(res.data!.content)
-  }, [])
 
   const load = useCallback(async (p: number) => {
     setLoading(true)
-    const res = await http.get<SpringPage<BodegaTiendaResponse>>(`/bodegas-tienda?page=${p}&size=10`)
+    const warehouses = await http.get<SpringPage<BodegaTiendaResponse>>(`/bodegas-tienda?page=${p}&size=${size}`)
     setLoading(false)
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else setPageData(res.data!)
-  }, [])
+    if (warehouses.error) setBanner({ status: warehouses.error.status as HttpStatus, mensaje: warehouses.error.mensaje })
+    else {
+      setPageData(warehouses.data!)
+      try {
+        const next = new Map((await loadTiendas()).map(item => [item.id, item]))
+        const missing = [...new Set(warehouses.data!.content.map(item => item.tiendaId).filter(id => !next.has(id)))]
+        await Promise.all(missing.map(async id => {
+          try { next.set(id, await loadStoreDetail(id)) } catch { /* unresolved stores render as em dashes */ }
+        }))
+        setTiendas(next)
+      } catch (error) {
+        const apiError = error as { status: number; mensaje: string }
+        setBanner({ status: apiError.status as HttpStatus, mensaje: apiError.mensaje })
+      }
+    }
+  }, [size])
 
-  useEffect(() => { load(page); loadTiendas() }, [load, loadTiendas, page])
+  useEffect(() => { load(page) }, [load, page])
+  const store = (id: string) => tiendas.get(id)
 
-  const openCreate = () => {
-    setEdit(null)
-    setTiendaId(tiendas.find(t => t.estado === 'ACTIVA')?.id ?? tiendas[0]?.id ?? '')
-    setShowForm(true)
-  }
-
-  const openReasignar = (b: BodegaTiendaResponse) => {
-    setEdit(b); setTiendaId(b.tiendaId); setShowForm(true)
-  }
-
-  const save = async () => {
-    if (!tiendaId) return
-    setSaving(true)
-    const body = { tiendaId }
-    const res = edit
-      ? await http.put<BodegaTiendaResponse>(`/bodegas-tienda/${edit.id}`, body)
-      : await http.post<BodegaTiendaResponse>('/bodegas-tienda', body)
-    setSaving(false)
-    if (res.error) { setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje }); return }
-    setShowForm(false); setEdit(null); setTiendaId(''); load(page)
-  }
-
-  const del = async (id: string) => {
-    const res = await http.delete(`/bodegas-tienda/${id}`)
-    if (res.error) setBanner({ status: res.error.status as HttpStatus, mensaje: res.error.mensaje })
-    else load(page)
-  }
-
-  return (
-    <>
-      <Shell title="Bodegas de Tienda" banner={banner} onBannerClose={() => setBanner(null)}
-        action={<Btn variant="primary" small onClick={openCreate}>+ Registrar Bodega</Btn>}>
-        <div style={{ border: `1px solid ${T.rule}` }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <THead cols={['ID Bodega', 'Tienda Vinculada', 'Ubicación', 'Acciones']} />
-            <tbody>
-              {loading ? <LoadingRow cols={4} /> : pageData.content.length === 0 ? <EmptyRow cols={4} /> :
-                pageData.content.map(b => (
-                  <TRow key={b.id}>
-                    <TD mono>{b.id.slice(0, 8)}…</TD>
-                    <TD><strong style={{ fontWeight: 500 }}>{b.tiendaNombre ?? <span style={{ color: T.faint }}>—</span>}</strong></TD>
-                    <TD>{b.tiendaUbicacion ?? <span style={{ color: T.faint }}>—</span>}</TD>
-                    <td style={{ padding: '8px 16px' }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <Btn variant="ghost" small onClick={() => openReasignar(b)}>Reasignar Tienda</Btn>
-                        <Btn variant="danger" small onClick={() => del(b.id)}>Eliminar</Btn>
-                      </div>
-                    </td>
-                  </TRow>
-                ))}
-            </tbody>
-          </table>
-          <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={p => { setPage(p); load(p) }} />
-        </div>
-      </Shell>
-
-      {showForm && (
-        <Modal title={edit ? 'Reasignar Bodega a Tienda' : 'Registrar Nueva Bodega'} onClose={() => { setShowForm(false); setEdit(null) }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <Label required>Tienda</Label>
-              <Select value={tiendaId} onChange={setTiendaId}>
-                <option value="">— Seleccionar tienda —</option>
-                {tiendas.map(t => (
-                  <option key={t.id} value={t.id}>
-                    {t.nombre}{t.ubicacion ? ` · ${t.ubicacion}` : ''}{t.estado === 'INACTIVA' ? ' (Inactiva)' : ''}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            {edit && (
-              <div style={{ fontSize: 12, color: T.muted, borderLeft: `2px solid ${T.rule}`, paddingLeft: 10, lineHeight: 1.5 }}>
-                La bodega <strong style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{edit.id.slice(0, 8)}…</strong> será reasignada a la tienda seleccionada.
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-              <Btn variant="ghost" onClick={() => { setShowForm(false); setEdit(null) }}>Cancelar</Btn>
-              <Btn variant="primary" onClick={save} loading={saving} disabled={!tiendaId}>{edit ? 'Reasignar' : 'Registrar'}</Btn>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </>
-  )
+  return <Shell title="Bodegas de Tienda" banner={banner} onBannerClose={() => setBanner(null)}>
+    <div style={{ fontSize: 12, color: T.muted, marginBottom: 14 }}>Vista de solo lectura. Las bodegas se crean automáticamente con cada tienda.</div>
+    <div style={{ border: `1px solid ${T.rule}` }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <THead cols={['Tienda', 'Ubicación', 'Estado de la tienda']} />
+      <tbody>{loading ? <LoadingRow cols={3} /> : pageData.content.length === 0 ? <EmptyRow cols={3} /> : pageData.content.map(b => {
+        const resolved = store(b.tiendaId)
+        const estado = resolved?.estado
+        return <TRow key={b.id}>
+          <TD><strong style={{ fontWeight: 500 }}>{b.tiendaNombre ?? resolved?.nombre ?? '—'}</strong></TD>
+          <TD>{b.tiendaUbicacion ?? resolved?.ubicacion ?? '—'}</TD>
+          <TD>{estado ? <Badge value={estado} variant={estado === 'ACTIVA' ? 'active' : 'inactive'} /> : <span style={{ color: T.faint }}>No disponible</span>}</TD>
+        </TRow>
+      })}</tbody>
+    </table>
+    <Paginator page={pageData.number} totalPages={pageData.totalPages} totalElements={pageData.totalElements} size={pageData.size} onPage={setPage} onSize={next => { setPage(0); setSize(next) }} />
+    </div>
+  </Shell>
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1812,14 +1797,14 @@ export default function App() {
 
   const handleLogout = useCallback(async () => {
     await http.postPublic('/auth/logout')
-    apiConfig.setToken(null)
+    apiConfig.setToken(null); resetCaches()
     setUser(null); setAuthState('login'); setView('usuarios')
   }, [])
 
   // Register 401 handler
   useEffect(() => {
     apiConfig.onUnauthorized(() => {
-      apiConfig.setToken(null); setUser(null); setAuthState('login')
+      apiConfig.setToken(null); resetCaches(); setUser(null); setAuthState('login')
     })
   }, [])
 
@@ -1841,6 +1826,9 @@ export default function App() {
       case 'tiendas':   return <TiendasView />
       case 'centros':   return <CentrosView />
       case 'bodegas':   return <BodegasView />
+      case 'inventario': return <InventoryView />
+      case 'ventas':     return <SalesView />
+      case 'reposicion': return <ReplenishmentView />
     }
   }
 
