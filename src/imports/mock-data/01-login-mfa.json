@@ -1,0 +1,304 @@
+{
+  "pantalla": "Login y MFA",
+  "descripcion": "Inicio de sesión, segundo factor, renovación y cierre.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "auth_login_200",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/login",
+        "cuerpo": {
+          "email": "vendedor@demo.local",
+          "password": "<CONTRASEÑA_DEMO>"
+        }
+      },
+      "status": 200,
+      "nota": "Sin MFA: llega el access token y la cookie refresh_token (HttpOnly).",
+      "headers": {
+        "Set-Cookie": [
+          "refresh_token=<REFRESH_TOKEN>; Path=/api/v1/auth; Max-Age=604799; Expires=Mon, 30 Nov 2026 00:37:48 GMT; Secure; HttpOnly; SameSite=None"
+        ]
+      },
+      "body": {
+        "mfaRequerido": false,
+        "mfaChallengeToken": null,
+        "accessToken": "<ACCESS_TOKEN>",
+        "usuario": {
+          "id": "76b6faf5-7844-41b9-8943-c05a65fdc3fa",
+          "email": "vendedor@demo.local",
+          "nombreCompleto": "Demo Vendedor",
+          "estado": "ACTIVO",
+          "creadoEn": "2026-11-23T00:37:45.108142Z"
+        }
+      }
+    },
+    {
+      "caso": "auth_login_200_mfa_requerido",
+      "rol": "VENDEDOR (cuenta MFA)",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/login",
+        "cuerpo": {
+          "email": "mfa@demo.local",
+          "password": "<CONTRASEÑA_DEMO>"
+        }
+      },
+      "status": 200,
+      "nota": "Cuenta con MFA: no hay token todavía; ir a la pantalla del código.",
+      "body": {
+        "mfaRequerido": true,
+        "mfaChallengeToken": "<MFA_CHALLENGE_TOKEN>",
+        "accessToken": null,
+        "usuario": null
+      }
+    },
+    {
+      "caso": "auth_login_mfa_200",
+      "rol": "VENDEDOR (cuenta MFA)",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/login/mfa",
+        "cuerpo": {
+          "mfaChallengeToken": "<MFA_CHALLENGE_TOKEN>",
+          "codigo": "<CODIGO_TOTP>"
+        }
+      },
+      "status": 200,
+      "headers": {
+        "Set-Cookie": [
+          "refresh_token=<REFRESH_TOKEN>; Path=/api/v1/auth; Max-Age=604799; Expires=Mon, 30 Nov 2026 00:38:01 GMT; Secure; HttpOnly; SameSite=None"
+        ]
+      },
+      "body": {
+        "mfaRequerido": false,
+        "mfaChallengeToken": null,
+        "accessToken": "<ACCESS_TOKEN>",
+        "usuario": {
+          "id": "156f54f9-47a5-4a42-bdd7-6fd2a11253a3",
+          "email": "mfa@demo.local",
+          "nombreCompleto": "Demo Mfa",
+          "estado": "ACTIVO",
+          "creadoEn": "2026-11-23T00:37:48.292490Z"
+        }
+      }
+    },
+    {
+      "caso": "auth_login_mfa_400_codigo",
+      "rol": "VENDEDOR (cuenta MFA)",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/login/mfa",
+        "cuerpo": {
+          "mfaChallengeToken": "<MFA_CHALLENGE_TOKEN>",
+          "codigo": "<CODIGO_TOTP>"
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "El código ingresado no es válido"
+      }
+    },
+    {
+      "caso": "auth_login_mfa_401_desafio",
+      "rol": "-",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/login/mfa",
+        "cuerpo": {
+          "mfaChallengeToken": "<MFA_CHALLENGE_TOKEN>",
+          "codigo": "<CODIGO_TOTP>"
+        }
+      },
+      "status": 401,
+      "nota": "Desafío vencido (5 min) o inválido: volver al login.",
+      "body": {
+        "mensaje": "Sesión inválida o expirada"
+      }
+    },
+    {
+      "caso": "auth_login_401_credenciales",
+      "rol": "-",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/login",
+        "cuerpo": {
+          "email": "vendedor@demo.local",
+          "password": "<CONTRASEÑA_DEMO>"
+        }
+      },
+      "status": 401,
+      "nota": "Mismo mensaje para clave errada, usuario inactivo o cuenta bloqueada.",
+      "body": {
+        "mensaje": "Credenciales inválidas"
+      }
+    },
+    {
+      "caso": "auth_login_400_cuerpo",
+      "rol": "-",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/login",
+        "cuerpo": {
+          "email": "no-es-email"
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "email: el email no tiene un formato válido; password: la contraseña es obligatoria"
+      }
+    },
+    {
+      "caso": "auth_refresh_200",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/refresh",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "El navegador manda la cookie solo; el cuerpo de la petición va vacío.",
+      "headers": {
+        "Set-Cookie": [
+          "refresh_token=<REFRESH_TOKEN>; Path=/api/v1/auth; Max-Age=604799; Expires=Mon, 30 Nov 2026 00:37:48 GMT; Secure; HttpOnly; SameSite=None"
+        ]
+      },
+      "body": {
+        "accessToken": "<ACCESS_TOKEN>"
+      }
+    },
+    {
+      "caso": "auth_refresh_401_reuso",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/refresh",
+        "cuerpo": null
+      },
+      "status": 401,
+      "nota": "Reusar un refresh ya rotado revoca la sesión: volver al login.",
+      "body": {
+        "mensaje": "Sesión inválida o expirada"
+      }
+    },
+    {
+      "caso": "auth_refresh_401_sin_cookie",
+      "rol": "-",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/refresh",
+        "cuerpo": null
+      },
+      "status": 401,
+      "body": {
+        "mensaje": "Sesión inválida o expirada"
+      }
+    },
+    {
+      "caso": "auth_logout_204",
+      "rol": "-",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/auth/logout",
+        "cuerpo": null
+      },
+      "status": 204,
+      "headers": {
+        "Set-Cookie": [
+          "refresh_token=; Path=/api/v1/auth; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly; SameSite=None"
+        ]
+      },
+      "body": null
+    },
+    {
+      "caso": "auth_401_sin_token",
+      "rol": "-",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": null
+      },
+      "status": 401,
+      "nota": "Cualquier endpoint protegido sin token.",
+      "headers": {
+        "WWW-Authenticate": "Bearer"
+      },
+      "body": {
+        "mensaje": "Se requiere autenticación"
+      }
+    },
+    {
+      "caso": "auth_401_token_invalido",
+      "rol": "-",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": null
+      },
+      "status": 401,
+      "nota": "Token vencido o inválido: intentar /auth/refresh una vez.",
+      "headers": {
+        "WWW-Authenticate": "Bearer"
+      },
+      "body": {
+        "mensaje": "Se requiere autenticación"
+      }
+    },
+    {
+      "caso": "mfa_activar_200",
+      "rol": "VENDEDOR (cuenta MFA)",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/mfa/activar",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Perfil: activar MFA. Mostrar el QR y el secreto.",
+      "body": {
+        "secreto": "<SECRETO_TOTP_BASE32>",
+        "qrCodeDataUri": "data:image/png;base64,<IMAGEN_QR>"
+      }
+    },
+    {
+      "caso": "mfa_confirmar_200",
+      "rol": "VENDEDOR (cuenta MFA)",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/mfa/confirmar",
+        "cuerpo": {
+          "codigo": "<CODIGO_TOTP>"
+        }
+      },
+      "status": 200,
+      "nota": "Los 8 códigos de respaldo se muestran solo esta vez.",
+      "body": {
+        "codigosRespaldo": [
+          "<CODIGO_RESPALDO_1>",
+          "<CODIGO_RESPALDO_2>",
+          "<CODIGO_RESPALDO_3>",
+          "<CODIGO_RESPALDO_4>",
+          "<CODIGO_RESPALDO_5>",
+          "<CODIGO_RESPALDO_6>",
+          "<CODIGO_RESPALDO_7>",
+          "<CODIGO_RESPALDO_8>"
+        ]
+      }
+    },
+    {
+      "caso": "mfa_confirmar_400_codigo",
+      "rol": "VENDEDOR (cuenta MFA)",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/mfa/confirmar",
+        "cuerpo": {
+          "codigo": "<CODIGO_TOTP>"
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "El código ingresado no es válido"
+      }
+    }
+  ]
+}

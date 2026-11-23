@@ -1,0 +1,1066 @@
+{
+  "pantalla": "Detalle de orden",
+  "descripcion": "Paso 3: orden con los intentos de CD (fallback) y su evolución.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "p3_orden_por_id",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Orden A recién creada: APROBADA, CD Sin Stock descartado y Principal asignado.",
+      "body": {
+        "id": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 19,
+        "cantidadPendiente": 19,
+        "cantidadDespachadaAcumulada": 0,
+        "estado": "APROBADA",
+        "fechaCreacion": "2026-11-23T00:38:02.941751Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 19",
+            "timestamp": "2026-11-23T00:38:02.951446Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:02.956518Z"
+          }
+        ],
+        "motivoCierre": null,
+        "cerradaPor": null,
+        "fechaCierre": null
+      }
+    },
+    {
+      "caso": "p3_aprobar_201_orden_generada_sin_cd",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/09f8af45-3a3a-4cd8-b5e6-07395eeffed3/aprobar",
+        "cuerpo": {
+          "cantidadAprobada": 5000
+        }
+      },
+      "status": 201,
+      "nota": "Ningún CD cubre 5000: orden GENERADA sin CD.",
+      "body": {
+        "recomendacionId": "09f8af45-3a3a-4cd8-b5e6-07395eeffed3",
+        "estado": "APROBADA",
+        "cantidadSugerida": 19,
+        "cantidadAprobada": 5000,
+        "desviacion": 4981,
+        "aprobadoPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaAprobacion": "2026-11-23T00:38:03.281409334Z",
+        "orden": {
+          "id": "32beaddb-f069-45a5-9796-68316692060f",
+          "recomendacionId": "09f8af45-3a3a-4cd8-b5e6-07395eeffed3",
+          "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+          "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+          "cdAsignadoId": null,
+          "motivoAsignacion": "Ningún CD cubre la cantidad solicitada",
+          "cantidadTotalSolicitada": 5000,
+          "cantidadPendiente": 5000,
+          "cantidadDespachadaAcumulada": 0,
+          "estado": "GENERADA",
+          "fechaCreacion": "2026-11-23T00:38:03.283107684Z",
+          "intentos": [
+            {
+              "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+              "ordenEvaluado": 1,
+              "resultado": "SIN_STOCK",
+              "motivo": "Disponible 3 menor que lo requerido 5000",
+              "timestamp": "2026-11-23T00:38:03.287582951Z"
+            },
+            {
+              "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+              "ordenEvaluado": 2,
+              "resultado": "SIN_STOCK",
+              "motivo": "Disponible 181 menor que lo requerido 5000",
+              "timestamp": "2026-11-23T00:38:03.290090437Z"
+            }
+          ],
+          "motivoCierre": null,
+          "cerradaPor": null,
+          "fechaCierre": null
+        }
+      }
+    },
+    {
+      "caso": "p8_cancelar_200",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/32beaddb-f069-45a5-9796-68316692060f/cancelar",
+        "cuerpo": {
+          "motivo": "Ningún CD tiene stock para 5000 unidades"
+        }
+      },
+      "status": 200,
+      "nota": "Cancelar la orden GENERADA.",
+      "body": {
+        "id": "32beaddb-f069-45a5-9796-68316692060f",
+        "recomendacionId": "09f8af45-3a3a-4cd8-b5e6-07395eeffed3",
+        "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+        "cdAsignadoId": null,
+        "motivoAsignacion": "Ningún CD cubre la cantidad solicitada",
+        "cantidadTotalSolicitada": 5000,
+        "cantidadPendiente": 5000,
+        "cantidadDespachadaAcumulada": 0,
+        "estado": "CANCELADA",
+        "fechaCreacion": "2026-11-23T00:38:03.283108Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 5000",
+            "timestamp": "2026-11-23T00:38:03.287583Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 181 menor que lo requerido 5000",
+            "timestamp": "2026-11-23T00:38:03.290090Z"
+          }
+        ],
+        "motivoCierre": "Ningún CD tiene stock para 5000 unidades",
+        "cerradaPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaCierre": "2026-11-23T00:38:03.419371757Z"
+      }
+    },
+    {
+      "caso": "p8_cancelar_409_ya_cancelada",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/32beaddb-f069-45a5-9796-68316692060f/cancelar",
+        "cuerpo": {
+          "motivo": "otra vez"
+        }
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "No se puede cancelar de la orden 32beaddb-f069-45a5-9796-68316692060f en estado CANCELADA"
+      }
+    },
+    {
+      "caso": "p8_cancelar_400_motivo_vacio",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/32beaddb-f069-45a5-9796-68316692060f/cancelar",
+        "cuerpo": {
+          "motivo": ""
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "motivo: El motivo es obligatorio"
+      }
+    },
+    {
+      "caso": "p3_aprobar_201_asignada_cd_sin_stock",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/4680542c-2769-4e56-9e2a-1cdd0677cded/aprobar",
+        "cuerpo": {
+          "cantidadAprobada": 2
+        }
+      },
+      "status": 201,
+      "nota": "Con 2 unidades el CD de prioridad 1 sí alcanza.",
+      "body": {
+        "recomendacionId": "4680542c-2769-4e56-9e2a-1cdd0677cded",
+        "estado": "APROBADA",
+        "cantidadSugerida": 19,
+        "cantidadAprobada": 2,
+        "desviacion": -17,
+        "aprobadoPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaAprobacion": "2026-11-23T00:38:03.548082751Z",
+        "orden": {
+          "id": "bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0",
+          "recomendacionId": "4680542c-2769-4e56-9e2a-1cdd0677cded",
+          "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+          "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+          "cdAsignadoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+          "motivoAsignacion": "Asignado al CD de prioridad 1",
+          "cantidadTotalSolicitada": 2,
+          "cantidadPendiente": 2,
+          "cantidadDespachadaAcumulada": 0,
+          "estado": "APROBADA",
+          "fechaCreacion": "2026-11-23T00:38:03.549835492Z",
+          "intentos": [
+            {
+              "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+              "ordenEvaluado": 1,
+              "resultado": "ASIGNADO",
+              "motivo": null,
+              "timestamp": "2026-11-23T00:38:03.557378738Z"
+            }
+          ],
+          "motivoCierre": null,
+          "cerradaPor": null,
+          "fechaCierre": null
+        }
+      }
+    },
+    {
+      "caso": "p3_ordenes_listado",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0",
+            "recomendacionId": "4680542c-2769-4e56-9e2a-1cdd0677cded",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "motivoAsignacion": "Asignado al CD de prioridad 1",
+            "cantidadTotalSolicitada": 2,
+            "cantidadPendiente": 2,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.549835Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.557379Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "32beaddb-f069-45a5-9796-68316692060f",
+            "recomendacionId": "09f8af45-3a3a-4cd8-b5e6-07395eeffed3",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": null,
+            "motivoAsignacion": "Ningún CD cubre la cantidad solicitada",
+            "cantidadTotalSolicitada": 5000,
+            "cantidadPendiente": 5000,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "CANCELADA",
+            "fechaCreacion": "2026-11-23T00:38:03.283108Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 5000",
+                "timestamp": "2026-11-23T00:38:03.287583Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 181 menor que lo requerido 5000",
+                "timestamp": "2026-11-23T00:38:03.290090Z"
+              }
+            ],
+            "motivoCierre": "Ningún CD tiene stock para 5000 unidades",
+            "cerradaPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+            "fechaCierre": "2026-11-23T00:38:03.419372Z"
+          },
+          {
+            "id": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+            "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 15,
+            "cantidadPendiente": 15,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.128285Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 15",
+                "timestamp": "2026-11-23T00:38:03.130923Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.135766Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+            "recomendacionId": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 19,
+            "cantidadPendiente": 19,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.083952Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 19",
+                "timestamp": "2026-11-23T00:38:03.087049Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.090397Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+            "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 19,
+            "cantidadPendiente": 19,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:02.941751Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 19",
+                "timestamp": "2026-11-23T00:38:02.951446Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:02.956518Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 5,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 5,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p3_ordenes_aprobadas",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento?estado=APROBADA",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0",
+            "recomendacionId": "4680542c-2769-4e56-9e2a-1cdd0677cded",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "motivoAsignacion": "Asignado al CD de prioridad 1",
+            "cantidadTotalSolicitada": 2,
+            "cantidadPendiente": 2,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.549835Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.557379Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+            "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 15,
+            "cantidadPendiente": 15,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.128285Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 15",
+                "timestamp": "2026-11-23T00:38:03.130923Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.135766Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+            "recomendacionId": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 19,
+            "cantidadPendiente": 19,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.083952Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 19",
+                "timestamp": "2026-11-23T00:38:03.087049Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.090397Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+            "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 19,
+            "cantidadPendiente": 19,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:02.941751Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 19",
+                "timestamp": "2026-11-23T00:38:02.951446Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:02.956518Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 4,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 4,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p4_orden_despachada",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Orden B tras el despacho parcial: DESPACHADA, despachado 10, pendiente 19.",
+      "body": {
+        "id": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "recomendacionId": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 19,
+        "cantidadPendiente": 19,
+        "cantidadDespachadaAcumulada": 10,
+        "estado": "DESPACHADA",
+        "fechaCreacion": "2026-11-23T00:38:03.083952Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 19",
+            "timestamp": "2026-11-23T00:38:03.087049Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:03.090397Z"
+          }
+        ],
+        "motivoCierre": null,
+        "cerradaPor": null,
+        "fechaCierre": null
+      }
+    },
+    {
+      "caso": "p6_orden_en_transito",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 19,
+        "cantidadPendiente": 19,
+        "cantidadDespachadaAcumulada": 19,
+        "estado": "EN_TRANSITO",
+        "fechaCreacion": "2026-11-23T00:38:02.941751Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 19",
+            "timestamp": "2026-11-23T00:38:02.951446Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:02.956518Z"
+          }
+        ],
+        "motivoCierre": null,
+        "cerradaPor": null,
+        "fechaCierre": null
+      }
+    },
+    {
+      "caso": "p7_orden_cerrada_total",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 19,
+        "cantidadPendiente": 0,
+        "cantidadDespachadaAcumulada": 19,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-11-23T00:38:02.941751Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 19",
+            "timestamp": "2026-11-23T00:38:02.951446Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:02.956518Z"
+          }
+        ],
+        "motivoCierre": null,
+        "cerradaPor": null,
+        "fechaCierre": null
+      }
+    },
+    {
+      "caso": "p7_orden_reabierta",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "recomendacionId": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 19,
+        "cantidadPendiente": 11,
+        "cantidadDespachadaAcumulada": 10,
+        "estado": "REABIERTA",
+        "fechaCreacion": "2026-11-23T00:38:03.083952Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 19",
+            "timestamp": "2026-11-23T00:38:03.087049Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:03.090397Z"
+          }
+        ],
+        "motivoCierre": null,
+        "cerradaPor": null,
+        "fechaCierre": null
+      }
+    },
+    {
+      "caso": "p8_orden_cerrada_dos_ciclos",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "recomendacionId": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 19,
+        "cantidadPendiente": 0,
+        "cantidadDespachadaAcumulada": 21,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-11-23T00:38:03.083952Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 19",
+            "timestamp": "2026-11-23T00:38:03.087049Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:03.090397Z"
+          }
+        ],
+        "motivoCierre": null,
+        "cerradaPor": null,
+        "fechaCierre": null
+      }
+    },
+    {
+      "caso": "p8_orden_cerrada_con_faltante",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+        "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+        "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 15,
+        "cantidadPendiente": 3,
+        "cantidadDespachadaAcumulada": 15,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-11-23T00:38:03.128285Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 15",
+            "timestamp": "2026-11-23T00:38:03.130923Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:03.135766Z"
+          }
+        ],
+        "motivoCierre": "Se acepta la pérdida de 3 unidades en tránsito",
+        "cerradaPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaCierre": "2026-11-23T00:38:08.766695Z"
+      }
+    },
+    {
+      "caso": "p8_ordenes_listado_final",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0",
+            "recomendacionId": "4680542c-2769-4e56-9e2a-1cdd0677cded",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "motivoAsignacion": "Asignado al CD de prioridad 1",
+            "cantidadTotalSolicitada": 2,
+            "cantidadPendiente": 2,
+            "cantidadDespachadaAcumulada": 2,
+            "estado": "DESPACHADA",
+            "fechaCreacion": "2026-11-23T00:38:03.549835Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.557379Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "32beaddb-f069-45a5-9796-68316692060f",
+            "recomendacionId": "09f8af45-3a3a-4cd8-b5e6-07395eeffed3",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": null,
+            "motivoAsignacion": "Ningún CD cubre la cantidad solicitada",
+            "cantidadTotalSolicitada": 5000,
+            "cantidadPendiente": 5000,
+            "cantidadDespachadaAcumulada": 0,
+            "estado": "CANCELADA",
+            "fechaCreacion": "2026-11-23T00:38:03.283108Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 5000",
+                "timestamp": "2026-11-23T00:38:03.287583Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 181 menor que lo requerido 5000",
+                "timestamp": "2026-11-23T00:38:03.290090Z"
+              }
+            ],
+            "motivoCierre": "Ningún CD tiene stock para 5000 unidades",
+            "cerradaPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+            "fechaCierre": "2026-11-23T00:38:03.419372Z"
+          },
+          {
+            "id": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+            "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 15,
+            "cantidadPendiente": 3,
+            "cantidadDespachadaAcumulada": 15,
+            "estado": "CERRADA",
+            "fechaCreacion": "2026-11-23T00:38:03.128285Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 15",
+                "timestamp": "2026-11-23T00:38:03.130923Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.135766Z"
+              }
+            ],
+            "motivoCierre": "Se acepta la pérdida de 3 unidades en tránsito",
+            "cerradaPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+            "fechaCierre": "2026-11-23T00:38:08.766695Z"
+          },
+          {
+            "id": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+            "recomendacionId": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 19,
+            "cantidadPendiente": 0,
+            "cantidadDespachadaAcumulada": 21,
+            "estado": "CERRADA",
+            "fechaCreacion": "2026-11-23T00:38:03.083952Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 19",
+                "timestamp": "2026-11-23T00:38:03.087049Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:03.090397Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          },
+          {
+            "id": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+            "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "motivoAsignacion": "Asignado al CD de prioridad 2",
+            "cantidadTotalSolicitada": 19,
+            "cantidadPendiente": 0,
+            "cantidadDespachadaAcumulada": 19,
+            "estado": "CERRADA",
+            "fechaCreacion": "2026-11-23T00:38:02.941751Z",
+            "intentos": [
+              {
+                "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+                "ordenEvaluado": 1,
+                "resultado": "SIN_STOCK",
+                "motivo": "Disponible 3 menor que lo requerido 19",
+                "timestamp": "2026-11-23T00:38:02.951446Z"
+              },
+              {
+                "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+                "ordenEvaluado": 2,
+                "resultado": "ASIGNADO",
+                "motivo": null,
+                "timestamp": "2026-11-23T00:38:02.956518Z"
+              }
+            ],
+            "motivoCierre": null,
+            "cerradaPor": null,
+            "fechaCierre": null
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 5,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 5,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p3_ordenes_403_operador",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento?estado=APROBADA",
+        "cuerpo": null
+      },
+      "status": 403,
+      "nota": "El OPERADOR_CD no puede listar órdenes (ver huecos del contrato).",
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "p3_orden_404_fuera_de_alcance",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO (otra tienda)",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "cuerpo": null
+      },
+      "status": 404,
+      "body": {
+        "mensaje": "No existe una orden de reabastecimiento con id 2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7"
+      }
+    },
+    {
+      "caso": "err_400_uuid_path_orden",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/no-es-uuid",
+        "cuerpo": null
+      },
+      "status": 400,
+      "body": {
+        "timestamp": "2026-11-23T00:38:10.588Z",
+        "status": 400,
+        "error": "Bad Request",
+        "path": "/api/v1/ordenes-reabastecimiento/no-es-uuid"
+      }
+    }
+  ]
+}

@@ -108,9 +108,9 @@ function Box({ title, children }: { title?: string; children: React.ReactNode })
   </section>
 }
 
-function DataTable({ columns, rows, empty = 'Sin datos' }: { columns: string[]; rows: React.ReactNode; empty?: string }) {
+function DataTable({ columns, rows, empty = 'Sin datos' }: { columns: React.ReactNode[]; rows: React.ReactNode; empty?: string }) {
   return <div style={{ border: `1px solid ${C.rule}`, overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
-    <thead><tr>{columns.map(column => <th key={column} style={thStyle}>{column}</th>)}</tr></thead>
+    <thead><tr>{columns.map((column, index) => <th key={index} style={thStyle}>{column}</th>)}</tr></thead>
     <tbody>{useMemo(() => Array.isArray(rows) && rows.length === 0 ? <tr><td colSpan={columns.length} style={{ padding: 30, textAlign: 'center', color: C.faint }}>{empty}</td></tr> : rows, [rows, columns.length, empty])}</tbody>
   </table></div>
 }
@@ -220,14 +220,24 @@ function NodeStock({ nodeId, sku, setError }: { nodeId: string; sku: (id: string
   const [page, setPage] = useState(0), [size, setSize] = useState(10)
   useEffect(() => { setPage(0); if (!nodeId) { setRows([]); return }; loadNodeStock(nodeId).then(setRows).catch(setError) }, [nodeId, setError])
   const data = useMemo<SpringPage<Stock>>(() => ({ content: rows.slice(page * size, page * size + size), number: page, size, totalElements: rows.length, totalPages: Math.ceil(rows.length / size) }), [page, rows, size])
-  return <><DataTable columns={['SKU', 'A la mano', 'Disponible para uso', 'Entrante', 'Saliente', 'Pronosticado']} rows={data.content.map(item => <tr key={item.varianteId}><Cell mono>{sku(item.varianteId)}</Cell><Cell>{item.aLaMano}</Cell><Cell>{item.disponibleParaUso}</Cell><Cell>{item.entrante}</Cell><Cell>{item.saliente}</Cell><Cell>{item.pronosticado}</Cell></tr>)} empty={nodeId ? 'Sin stock' : 'Selecciona un nodo'} /><Pager data={data} setPage={setPage} setSize={value => { setPage(0); setSize(value) }} /></>
+  const Quantity = ({ value, strong }: { value: number; strong?: boolean }) => <span style={{ fontFamily: 'var(--font-mono)', color: value < 0 ? C.danger : C.ink, fontWeight: strong ? 700 : 400 }}>{value}</span>
+  const Help = ({ label, help }: { label: string; help: string }) => <span title={help}>{label} ⓘ</span>
+  return <><DataTable columns={[
+    'SKU',
+    'A la mano',
+    <Help label="En camino" help="Pedido al CD y todavía no recibido" />,
+    <Help label="Reservado" help="Apartado para órdenes aprobadas que aún no salen" />,
+    <Help label="Disponible" help="Disponible = A la mano − Reservado" />,
+    <Help label="Proyectado" help="Proyectado = A la mano + En camino − Reservado" />,
+  ]} rows={data.content.map(item => <tr key={item.varianteId}><Cell mono>{sku(item.varianteId)}</Cell><Cell><Quantity value={item.aLaMano} /></Cell><Cell><Quantity value={item.entrante} /></Cell><Cell><Quantity value={item.saliente} /></Cell><Cell><Quantity value={item.disponibleParaUso} strong /></Cell><Cell><Quantity value={item.pronosticado} strong /></Cell></tr>)} empty={nodeId ? 'Sin stock' : 'Selecciona un nodo'} /><Pager data={data} setPage={setPage} setSize={value => { setPage(0); setSize(value) }} /></>
 }
 
 function VariantStock({ catalogs, sku, setError }: { catalogs: Loaded<Catalogs>; sku: (id: string) => string; setError: (error: ErrorState) => void }) {
   const [variantId, setVariantId] = useState(''), [rows, setRows] = useState<Stock[]>([])
+  const Quantity = ({ value }: { value: number }) => <span style={{ fontFamily: 'var(--font-mono)', color: value < 0 ? C.danger : C.ink }}>{value}</span>
   const search = async () => { if (!variantId) return; const result = await http.get<Stock[]>(`/variantes/${variantId}/inventario`); if (result.error) setError(result.error); else setRows(result.data!) }
   return <><Box><div style={{ ...grid(2), alignItems: 'end' }}><VariantChoice value={variantId} onChange={setVariantId} catalogs={catalogs} /><Button onClick={search} disabled={!variantId}>Consultar stock</Button></div></Box>
-    <DataTable columns={['SKU', 'A la mano', 'Disponible para uso', 'Entrante', 'Saliente', 'Pronosticado']} rows={rows.map((item, index) => <tr key={`${item.nodoId}-${index}`}><Cell mono>{sku(item.varianteId)}</Cell><Cell>{item.aLaMano}</Cell><Cell>{item.disponibleParaUso}</Cell><Cell>{item.entrante}</Cell><Cell>{item.saliente}</Cell><Cell>{item.pronosticado}</Cell></tr>)} empty="Sin stock visible en los nodos del usuario" /></>
+    <DataTable columns={['SKU', 'A la mano', 'En camino', 'Reservado', 'Disponible', 'Proyectado']} rows={rows.map((item, index) => <tr key={`${item.nodoId}-${index}`}><Cell mono>{sku(item.varianteId)}</Cell><Cell><Quantity value={item.aLaMano} /></Cell><Cell><Quantity value={item.entrante} /></Cell><Cell><Quantity value={item.saliente} /></Cell><Cell><Quantity value={item.disponibleParaUso} /></Cell><Cell><Quantity value={item.pronosticado} /></Cell></tr>)} empty="Sin stock visible en los nodos del usuario" /></>
 }
 
 const MAX_CARGA = 500
@@ -364,6 +374,8 @@ export function SalesView() {
 function Cart({ store, catalogs, sku, setError }: { store: TiendaConNodosResponse | null; catalogs: Loaded<Catalogs>; sku: (id: string) => string; setError: (error: ErrorState) => void }) {
   const [transactionId, setTransactionId] = useState(uuid), [force, setForce] = useState(false)
   const [items, setItems] = useState([{ sku: '', cantidad: '1', precioUnitario: '' }]), [result, setResult] = useState<Sale | null>(null), [message, setMessage] = useState('')
+  const [timeline, setTimeline] = useState<string[]>([])
+  const [lastTransaction, setLastTransaction] = useState<{ id: string; sale: Sale } | null>(null)
   const [stock, setStock] = useState<NodeStock[]>([])
   useEffect(() => {
     setItems([{ sku: '', cantidad: '1', precioUnitario: '' }])
@@ -372,8 +384,21 @@ function Cart({ store, catalogs, sku, setError }: { store: TiendaConNodosRespons
   }, [store, setError])
   const stockByVariant = useMemo(() => new Map(stock.map(row => [row.varianteId, row.aLaMano])), [stock])
   const allowedIds = useMemo(() => new Set(stock.map(row => row.varianteId)), [stock])
-  const update = (index: number, key: string, value: string) => setItems(current => current.map((item, i) => i === index ? { ...item, [key]: value } : item))
+  const beginNewTransaction = () => {
+    if (lastTransaction) {
+      setLastTransaction(null)
+      setTransactionId(uuid())
+      setResult(null)
+      setTimeline([])
+      setMessage('')
+    }
+  }
+  const update = (index: number, key: string, value: string) => {
+    beginNewTransaction()
+    setItems(current => current.map((item, i) => i === index ? { ...item, [key]: value } : item))
+  }
   const chooseVariant = (index: number, value: string) => {
+    beginNewTransaction()
     const variant = catalogs?.variantesBySku.get(value)
     const price = variant ? catalogs?.templatesById.get(variant.templateId)?.precioBase : null
     setItems(current => current.map((item, i) => i === index ? { ...item, sku: value, precioUnitario: price != null ? price.toFixed(2) : item.precioUnitario } : item))
@@ -384,20 +409,47 @@ function Cart({ store, catalogs, sku, setError }: { store: TiendaConNodosRespons
   }
   const submit = async () => {
     setMessage('')
+    if (lastTransaction?.id === transactionId) {
+      setResult(lastTransaction.sale)
+      setMessage('La misma transacción se recibió una sola vez.')
+      return
+    }
     if (!store || items.some(item => !item.sku.trim() || Number(item.cantidad) <= 0 || !Number.isInteger(Number(item.cantidad)) || Number(item.precioUnitario) < 0 || !item.precioUnitario || !/^\d+(?:\.\d{1,2})?$/.test(item.precioUnitario))) { setMessage('Selecciona una tienda y completa las variantes, cantidades y precios con un máximo de dos decimales.'); return }
+    const beforeAlmacen = new Map(stock.map(row => [row.varianteId, row.aLaMano]))
+    const bodegaBefore = await loadNodeStock(store.bodegaId).catch(() => [] as NodeStock[])
+    const beforeBodega = new Map(bodegaBefore.map(row => [row.varianteId, row.aLaMano]))
     const response = await http.post<Sale>('/ventas', { transaccionId: transactionId, tiendaId: store.id, canal: 'FISICO', forzarSinStock: force, items: items.map(item => ({ sku: item.sku.trim(), cantidad: Number(item.cantidad), precioUnitario: Number(Number(item.precioUnitario).toFixed(2)) })) })
     if (response.error) { setError(response.error); return }
+    invalidateNodeStock(store.bodegaId)
     invalidateNodeStock(store.almacenId)
-    loadNodeStock(store.almacenId).then(setStock).catch(setError)
-    setResult(response.data!); setItems([{ sku: '', cantidad: '1', precioUnitario: '' }]); setForce(false); setTransactionId(uuid())
+    const [afterAlmacen, afterBodega] = await Promise.all([
+      loadNodeStock(store.almacenId).catch(() => [] as NodeStock[]),
+      loadNodeStock(store.bodegaId).catch(() => [] as NodeStock[]),
+    ])
+    setStock(afterAlmacen)
+    const sale = response.data!
+    setLastTransaction({ id: transactionId, sale })
+    const steps = sale.lineas.map(line => {
+      const variant = catalogs?.variantesById.get(line.varianteId)?.sku ?? sku(line.varianteId)
+      const almacenA = afterAlmacen.find(row => row.varianteId === line.varianteId)?.aLaMano
+      const bodegaA = afterBodega.find(row => row.varianteId === line.varianteId)?.aLaMano
+      const almacenBefore = beforeAlmacen.get(line.varianteId)
+      const bodegaBeforeQty = beforeBodega.get(line.varianteId)
+      const repuesto = typeof almacenBefore === 'number' && typeof almacenA === 'number' && almacenA > almacenBefore - line.cantidad
+      const base = `Almacén ${variant}: bajó ${typeof almacenBefore === 'number' ? almacenBefore : '?'} → ${typeof almacenA === 'number' ? almacenA : '?'}`
+      const repo = repuesto && typeof bodegaA === 'number' ? `; se repuso desde la Bodega (${typeof bodegaBeforeQty === 'number' ? bodegaBeforeQty : '?'} → ${bodegaA})` : ''
+      return `${base}${repo}${typeof bodegaA === 'number' && bodegaA < 5 ? ' → la bodega quedó bajo su mínimo (5): se generó una recomendación de 19 unidades' : ''}`
+    })
+    setTimeline(steps)
+    setResult(sale); setItems([{ sku: '', cantidad: '1', precioUnitario: '' }]); setForce(false)
   }
   return <><Box title="Venta"><div style={grid(2)}><Field label="Transacción actual" value={transactionId} onChange={() => undefined} readOnly /></div>
     {store && <div style={{ color: C.muted, fontSize: 12, marginTop: 8 }}>Nodo de venta: Almacén seleccionado</div>}
-    {items.map((item, index) => <div key={index} style={{ ...grid(4), alignItems: 'end', marginTop: 12 }}><VariantChoice by="sku" value={item.sku} onChange={value => chooseVariant(index, value)} catalogs={catalogs} allowedIds={allowedIds} stockByVariant={stockByVariant} emptyMessage="El Almacén de esta tienda aún no tiene variantes cargadas" /><div><Field label="Cantidad" type="number" value={item.cantidad} onChange={value => update(index, 'cantidad', value)} required />{short(item) && <div style={{ color: C.danger, fontSize: 12, marginTop: 5 }}>Sin stock suficiente</div>}</div><Field label="Precio unitario" type="number" value={item.precioUnitario} onChange={value => update(index, 'precioUnitario', value)} required /><Button kind="danger" disabled={items.length === 1} onClick={() => setItems(current => current.filter((_, i) => i !== index))}>Quitar</Button></div>)}
-    <label style={{ display: 'block', margin: '15px 0', fontSize: 13 }}><input type="checkbox" checked={force} onChange={event => setForce(event.target.checked)} /> Forzar sin stock</label>
-    {message && <p style={{ color: C.danger }}>{message}</p>}<div style={{ display: 'flex', gap: 8 }}><Button kind="ghost" disabled={items.length >= 200} onClick={() => setItems(current => [...current, { sku: '', cantidad: '1', precioUnitario: '' }])}>Añadir línea</Button><Button onClick={submit}>Registrar venta</Button></div>
+    {items.map((item, index) => <div key={index} style={{ ...grid(4), alignItems: 'end', marginTop: 12 }}><VariantChoice by="sku" value={item.sku} onChange={value => chooseVariant(index, value)} catalogs={catalogs} allowedIds={allowedIds} stockByVariant={stockByVariant} emptyMessage="El Almacén de esta tienda aún no tiene variantes cargadas" /><div><Field label="Cantidad" type="number" value={item.cantidad} onChange={value => update(index, 'cantidad', value)} required />{short(item) && <div style={{ color: C.danger, fontSize: 12, marginTop: 5 }}>Sin stock suficiente</div>}</div><Field label="Precio unitario" type="number" value={item.precioUnitario} onChange={value => update(index, 'precioUnitario', value)} required /><Button kind="danger" disabled={items.length === 1} onClick={() => { beginNewTransaction(); setItems(current => current.filter((_, i) => i !== index)) }}>Quitar</Button></div>)}
+    <label style={{ display: 'block', margin: '15px 0', fontSize: 13 }}><input type="checkbox" checked={force} onChange={event => { beginNewTransaction(); setForce(event.target.checked) }} /> Forzar sin stock</label>
+    {message && <p style={{ color: C.danger }}>{message}</p>}<div style={{ display: 'flex', gap: 8 }}><Button kind="ghost" disabled={items.length >= 200} onClick={() => { beginNewTransaction(); setItems(current => [...current, { sku: '', cantidad: '1', precioUnitario: '' }]) }}>Añadir línea</Button><Button kind="ghost" onClick={() => { setLastTransaction(null); setResult(null); setTimeline([]); setItems([{ sku: '', cantidad: '1', precioUnitario: '' }]); setForce(false); setTransactionId(uuid()); setMessage('Nueva venta preparada.') }}>Nueva venta</Button><Button onClick={submit}>Registrar venta</Button></div>
   </Box>
-  {result && <Box title={`Venta registrada · Total ${result.total.toFixed(2)}`}><DataTable columns={['SKU', 'Cantidad', 'Precio unitario', 'Estado']} rows={result.lineas.map(line => <tr key={line.id}><Cell mono>{sku(line.varianteId)}</Cell><Cell>{line.cantidad}</Cell><Cell>{line.precioUnitario.toFixed(2)}</Cell><Cell><Badge dark={line.estado === 'REGISTRADA'}>{line.estado}</Badge></Cell></tr>)} /></Box>}</>
+  {result && <Box title={`Venta registrada · Total ${result.total.toFixed(2)}`}><DataTable columns={['SKU', 'Cantidad', 'Precio unitario', 'Estado']} rows={result.lineas.map(line => <tr key={line.id}><Cell mono>{sku(line.varianteId)}</Cell><Cell>{line.cantidad}</Cell><Cell>{line.precioUnitario.toFixed(2)}</Cell><Cell><Badge dark={line.estado === 'REGISTRADA'}>{line.estado}</Badge></Cell></tr>)} />{timeline.length > 0 && <ol style={{ margin: '14px 0 0', paddingLeft: 20, color: C.muted, fontSize: 12, lineHeight: 1.7 }}>{timeline.map((step, index) => <li key={index}>{step}</li>)}</ol>}</Box>}</>
 }
 
 function SalesHistory({ stores, catalogs, sku, setError }: { stores: Loaded<TiendaResponse[]>; catalogs: Loaded<Catalogs>; sku: (id: string) => string; setError: (error: ErrorState) => void }) {

@@ -1,0 +1,50 @@
+{
+  "pantalla": "Referencia",
+  "descripcion": "Ids de los datos sembrados y del recorrido. Todos los demás archivos usan estos mismos ids.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [],
+  "ids": {
+    "variantes": {
+      "AZ-M": "ce457d78-460f-4997-b22e-a491f579fe36",
+      "BL-L": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253"
+    },
+    "cds": {
+      "principal": {
+        "id": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30"
+      },
+      "sinStock": {
+        "id": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+        "nodoId": "daf8589f-432b-4944-b410-c2ef240d20e8"
+      }
+    },
+    "tiendas": {
+      "centro": {
+        "id": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "nombre": "Tienda Demo Centro S3",
+        "almacenId": "4b5508c1-910d-4360-99dc-bdf8cc3a8c7b",
+        "bodegaId": "0fe4ef24-652a-45ab-b569-67924f44214d"
+      },
+      "norte": {
+        "id": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "nombre": "Tienda Demo Norte S3",
+        "almacenId": "e77acc97-5bc2-4767-9f6f-42b40bd67aba",
+        "bodegaId": "c4e696a8-f7b7-4e76-a35d-a2346f41b28b"
+      },
+      "sur (solo para probar alcance)": "96408f30-5c6c-4ca7-bb7f-5694ea901807"
+    },
+    "ordenes": {
+      "A_total": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+      "B_parcial_reabierta": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+      "C_cerrada_con_faltante": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+      "D_generada_cancelada": "32beaddb-f069-45a5-9796-68316692060f",
+      "E_cd_sin_stock": "bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0"
+    },
+    "viajes": {
+      "V1_dos_paradas": "b0831076-081d-432d-b3bf-ffcefc50846a",
+      "V2_parcial": "80efbbb3-2121-4688-a855-d7ec64eeac34",
+      "V3_armado": "6825d560-4539-4396-a87a-67182cf958f8",
+      "V4_segundo_ciclo": "b91640d3-dce9-431d-8811-e45ecf68dddb"
+    }
+  }
+}

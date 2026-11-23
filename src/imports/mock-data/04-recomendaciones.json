@@ -1,0 +1,598 @@
+{
+  "pantalla": "Recomendaciones",
+  "descripcion": "Paso 1 (lista) y paso 2 (aprobar, editar o rechazar).",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "p1_recomendaciones_borrador_centro",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones?tiendaId=abed0b85-7532-4edd-9f0b-abcb3b885bad&estado=BORRADOR",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Aparece sola después de la venta; no hace falta pulsar Evaluar.",
+      "body": {
+        "content": [
+          {
+            "id": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "BORRADOR",
+            "fechaCreacion": "2026-11-23T00:38:01.775681Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 1,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 1,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p1_recomendaciones_borrador_todas",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones?estado=BORRADOR",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "f9fe49e8-37b2-42e0-8984-e21962dd1b25",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "BORRADOR",
+            "fechaCreacion": "2026-11-23T00:38:02.690467Z"
+          },
+          {
+            "id": "889be78d-b327-4847-8663-510b21e5e0eb",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "BORRADOR",
+            "fechaCreacion": "2026-11-23T00:38:02.609928Z"
+          },
+          {
+            "id": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "BORRADOR",
+            "fechaCreacion": "2026-11-23T00:38:02.534671Z"
+          },
+          {
+            "id": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "BORRADOR",
+            "fechaCreacion": "2026-11-23T00:38:01.775681Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 4,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 4,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p1_recomendacion_por_id",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones/c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+        "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+        "cantidadSugerida": 19,
+        "estado": "BORRADOR",
+        "fechaCreacion": "2026-11-23T00:38:01.775681Z"
+      }
+    },
+    {
+      "caso": "p2_aprobar_201_sin_cuerpo",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/c2280d0d-a8d8-4a51-b72f-6ac73cab8eff/aprobar",
+        "cuerpo": null
+      },
+      "status": 201,
+      "nota": "Caso feliz: aprueba la cantidad sugerida y crea la orden con fallback.",
+      "body": {
+        "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+        "estado": "APROBADA",
+        "cantidadSugerida": 19,
+        "cantidadAprobada": 19,
+        "desviacion": 0,
+        "aprobadoPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaAprobacion": "2026-11-23T00:38:02.938580692Z",
+        "orden": {
+          "id": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+          "recomendacionId": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+          "motivoAsignacion": "Asignado al CD de prioridad 2",
+          "cantidadTotalSolicitada": 19,
+          "cantidadPendiente": 19,
+          "cantidadDespachadaAcumulada": 0,
+          "estado": "APROBADA",
+          "fechaCreacion": "2026-11-23T00:38:02.941750932Z",
+          "intentos": [
+            {
+              "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+              "ordenEvaluado": 1,
+              "resultado": "SIN_STOCK",
+              "motivo": "Disponible 3 menor que lo requerido 19",
+              "timestamp": "2026-11-23T00:38:02.951446191Z"
+            },
+            {
+              "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+              "ordenEvaluado": 2,
+              "resultado": "ASIGNADO",
+              "motivo": null,
+              "timestamp": "2026-11-23T00:38:02.956517705Z"
+            }
+          ],
+          "motivoCierre": null,
+          "cerradaPor": null,
+          "fechaCierre": null
+        }
+      }
+    },
+    {
+      "caso": "p2_aprobar_201_editando_cantidad",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/889be78d-b327-4847-8663-510b21e5e0eb/aprobar",
+        "cuerpo": {
+          "cantidadAprobada": 15
+        }
+      },
+      "status": 201,
+      "nota": "Editar: se aprueba 15 en lugar de 19 (desviacion -4).",
+      "body": {
+        "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+        "estado": "APROBADA",
+        "cantidadSugerida": 19,
+        "cantidadAprobada": 15,
+        "desviacion": -4,
+        "aprobadoPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaAprobacion": "2026-11-23T00:38:03.127103991Z",
+        "orden": {
+          "id": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+          "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+          "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+          "motivoAsignacion": "Asignado al CD de prioridad 2",
+          "cantidadTotalSolicitada": 15,
+          "cantidadPendiente": 15,
+          "cantidadDespachadaAcumulada": 0,
+          "estado": "APROBADA",
+          "fechaCreacion": "2026-11-23T00:38:03.128285258Z",
+          "intentos": [
+            {
+              "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+              "ordenEvaluado": 1,
+              "resultado": "SIN_STOCK",
+              "motivo": "Disponible 3 menor que lo requerido 15",
+              "timestamp": "2026-11-23T00:38:03.130922672Z"
+            },
+            {
+              "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+              "ordenEvaluado": 2,
+              "resultado": "ASIGNADO",
+              "motivo": null,
+              "timestamp": "2026-11-23T00:38:03.135766035Z"
+            }
+          ],
+          "motivoCierre": null,
+          "cerradaPor": null,
+          "fechaCierre": null
+        }
+      }
+    },
+    {
+      "caso": "p2_rechazar_200",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/f9fe49e8-37b2-42e0-8984-e21962dd1b25/rechazar",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "f9fe49e8-37b2-42e0-8984-e21962dd1b25",
+        "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+        "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+        "cantidadSugerida": 19,
+        "estado": "RECHAZADA",
+        "fechaCreacion": "2026-11-23T00:38:02.690467Z"
+      }
+    },
+    {
+      "caso": "p2_aprobar_409_ya_aprobada",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/c2280d0d-a8d8-4a51-b72f-6ac73cab8eff/aprobar",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "No se puede aprobar la recomendación c2280d0d-a8d8-4a51-b72f-6ac73cab8eff: está en estado APROBADA"
+      }
+    },
+    {
+      "caso": "p2_rechazar_409_ya_aprobada",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/c2280d0d-a8d8-4a51-b72f-6ac73cab8eff/rechazar",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "No se puede rechazar la recomendación c2280d0d-a8d8-4a51-b72f-6ac73cab8eff: está en estado APROBADA"
+      }
+    },
+    {
+      "caso": "p2_aprobar_400_cantidad_cero",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/1e7f480e-2c77-481e-acc0-d4137ac7cb46/aprobar",
+        "cuerpo": {
+          "cantidadAprobada": 0
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "cantidadAprobada: La cantidad aprobada debe ser mayor que cero"
+      }
+    },
+    {
+      "caso": "p2_aprobar_400_uuid_invalido",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/no-es-uuid/aprobar",
+        "cuerpo": null
+      },
+      "status": 400,
+      "nota": "Ojo: este 400 no trae {mensaje}; trae el cuerpo por defecto de Spring.",
+      "body": {
+        "timestamp": "2026-11-23T00:38:02.923Z",
+        "status": 400,
+        "error": "Bad Request",
+        "path": "/api/v1/recomendaciones/no-es-uuid/aprobar"
+      }
+    },
+    {
+      "caso": "p2_aprobar_403_vendedor",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/1e7f480e-2c77-481e-acc0-d4137ac7cb46/aprobar",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "p2_aprobar_404_fuera_de_alcance",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO (otra tienda)",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/1e7f480e-2c77-481e-acc0-d4137ac7cb46/aprobar",
+        "cuerpo": null
+      },
+      "status": 404,
+      "body": {
+        "mensaje": "No existe una recomendación con id 1e7f480e-2c77-481e-acc0-d4137ac7cb46"
+      }
+    },
+    {
+      "caso": "p1_recomendaciones_400_estado_invalido",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones?estado=FOO",
+        "cuerpo": null
+      },
+      "status": 400,
+      "body": {
+        "timestamp": "2026-11-23T00:38:02.793Z",
+        "status": 400,
+        "error": "Bad Request",
+        "path": "/api/v1/recomendaciones"
+      }
+    },
+    {
+      "caso": "p1_recomendaciones_404_tienda_fuera",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO (otra tienda)",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones?tiendaId=abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "cuerpo": null
+      },
+      "status": 404,
+      "body": {
+        "mensaje": "No existe una tienda con id abed0b85-7532-4edd-9f0b-abcb3b885bad"
+      }
+    },
+    {
+      "caso": "p1_recomendaciones_vacio_fuera",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO (otra tienda)",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [],
+        "empty": true,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 0,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 0,
+        "totalPages": 0
+      }
+    },
+    {
+      "caso": "p2_evaluar_200_norte",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/evaluar?tiendaId=8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Evaluar a mano: creó una recomendación nueva después del rechazo.",
+      "body": {
+        "recomendacionesCreadas": 1,
+        "recomendaciones": [
+          {
+            "id": "09f8af45-3a3a-4cd8-b5e6-07395eeffed3",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "BORRADOR",
+            "fechaCreacion": "2026-11-23T00:38:03.222349309Z"
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p2_evaluar_200_sin_nuevas",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/recomendaciones/evaluar?tiendaId=8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "recomendacionesCreadas": 0,
+        "recomendaciones": []
+      }
+    },
+    {
+      "caso": "p3_recomendaciones_aprobadas",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones?estado=APROBADA",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "4680542c-2769-4e56-9e2a-1cdd0677cded",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.515464Z"
+          },
+          {
+            "id": "09f8af45-3a3a-4cd8-b5e6-07395eeffed3",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:03.222349Z"
+          },
+          {
+            "id": "889be78d-b327-4847-8663-510b21e5e0eb",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:02.609928Z"
+          },
+          {
+            "id": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:02.534671Z"
+          },
+          {
+            "id": "c2280d0d-a8d8-4a51-b72f-6ac73cab8eff",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 19,
+            "estado": "APROBADA",
+            "fechaCreacion": "2026-11-23T00:38:01.775681Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 5,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 5,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p7_recomendaciones_borrador_tras_recepcion",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/recomendaciones?estado=BORRADOR",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Recomendación nacida sola al aprobar solo 2 de lo sugerido (Norte BL-L).",
+      "body": {
+        "content": [
+          {
+            "id": "4ed17fb8-e0a8-4f11-9e22-68e4db9b4f81",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cdSugeridoId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "cantidadSugerida": 17,
+            "estado": "BORRADOR",
+            "fechaCreacion": "2026-11-23T00:38:03.568846Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 1,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 1,
+        "totalPages": 1
+      }
+    }
+  ]
+}

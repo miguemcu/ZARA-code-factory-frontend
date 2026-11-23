@@ -1,0 +1,450 @@
+{
+  "pantalla": "Despacho y ciclos pendientes de viaje",
+  "descripcion": "Paso 4: despachar una orden; lista de ciclos sin viaje.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "p4_despachar_201_completo",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7/despachos",
+        "cuerpo": null
+      },
+      "status": 201,
+      "body": {
+        "id": "3d6e13b3-fbd0-4729-a62e-56fd66f2757a",
+        "ordenId": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+        "numeroCiclo": 1,
+        "cantidadSolicitada": 19,
+        "cantidadDespachada": 19,
+        "cantidadPendiente": 0,
+        "resultado": "COMPLETO",
+        "fillRate": 1.0,
+        "fechaDespacho": "2026-11-23T00:38:04.083883312Z"
+      }
+    },
+    {
+      "caso": "p4_despachar_201_parcial",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/97f1888b-e4e5-41f0-b8a4-14bc1515fa7a/despachos",
+        "cuerpo": null
+      },
+      "status": 201,
+      "nota": "El CD tenía 10 a la mano para 19: ciclo PARCIAL, fill rate 0.5263.",
+      "body": {
+        "id": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+        "ordenId": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "numeroCiclo": 1,
+        "cantidadSolicitada": 19,
+        "cantidadDespachada": 10,
+        "cantidadPendiente": 9,
+        "resultado": "PARCIAL",
+        "fillRate": 0.5263,
+        "fechaDespacho": "2026-11-23T00:38:04.436379335Z"
+      }
+    },
+    {
+      "caso": "p4_despachar_201_norte",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/24ddd9f9-7b3c-483f-b071-78e4d38a8d7b/despachos",
+        "cuerpo": null
+      },
+      "status": 201,
+      "body": {
+        "id": "6804ac60-da24-4efd-9834-39a79c976760",
+        "ordenId": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+        "numeroCiclo": 1,
+        "cantidadSolicitada": 15,
+        "cantidadDespachada": 15,
+        "cantidadPendiente": 0,
+        "resultado": "COMPLETO",
+        "fillRate": 1.0,
+        "fechaDespacho": "2026-11-23T00:38:04.471774167Z"
+      }
+    },
+    {
+      "caso": "p4_despachar_201_desde_cd_sin_stock",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0/despachos",
+        "cuerpo": null
+      },
+      "status": 201,
+      "body": {
+        "id": "36a64773-4df3-435c-ae0e-911e99107288",
+        "ordenId": "bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0",
+        "numeroCiclo": 1,
+        "cantidadSolicitada": 2,
+        "cantidadDespachada": 2,
+        "cantidadPendiente": 0,
+        "resultado": "COMPLETO",
+        "fillRate": 1.0,
+        "fechaDespacho": "2026-11-23T00:38:04.514292660Z"
+      }
+    },
+    {
+      "caso": "p8_despachar_201_segundo_ciclo",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/97f1888b-e4e5-41f0-b8a4-14bc1515fa7a/despachos",
+        "cuerpo": null
+      },
+      "status": 201,
+      "nota": "Orden REABIERTA: el ciclo 2 despacha las 11 pendientes.",
+      "body": {
+        "id": "8b1dc182-479d-4d36-994a-1022d7b31b8d",
+        "ordenId": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "numeroCiclo": 2,
+        "cantidadSolicitada": 11,
+        "cantidadDespachada": 11,
+        "cantidadPendiente": 0,
+        "resultado": "COMPLETO",
+        "fillRate": 1.0,
+        "fechaDespacho": "2026-11-23T00:38:08.851747874Z"
+      }
+    },
+    {
+      "caso": "p4_despachar_409_ya_despachada",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7/despachos",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "No se puede iniciar el despacho de la orden 2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7 en estado DESPACHADA"
+      }
+    },
+    {
+      "caso": "p4_despachar_409_orden_generada",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/32beaddb-f069-45a5-9796-68316692060f/despachos",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "No se puede iniciar el despacho de la orden 32beaddb-f069-45a5-9796-68316692060f en estado GENERADA"
+      }
+    },
+    {
+      "caso": "p8_despachar_409_cd_sin_a_la_mano",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/97f1888b-e4e5-41f0-b8a4-14bc1515fa7a/despachos",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "El CD no tiene unidades a la mano para despachar la orden 97f1888b-e4e5-41f0-b8a4-14bc1515fa7a"
+      }
+    },
+    {
+      "caso": "p4_despachar_404_inexistente",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/0f287a7a-3a5a-4bf4-bdda-a9697e06c088/despachos",
+        "cuerpo": null
+      },
+      "status": 404,
+      "body": {
+        "mensaje": "No existe una orden de reabastecimiento con id 0f287a7a-3a5a-4bf4-bdda-a9697e06c088"
+      }
+    },
+    {
+      "caso": "p4_despachar_403_encargado",
+      "rol": "ENCARGADO_BODEGA",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7/despachos",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "p4_ciclo_por_id",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ciclos-despacho/19a09432-2145-4fb5-870b-af57c11bf3bc",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+        "ordenId": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "numeroCiclo": 1,
+        "cantidadSolicitada": 19,
+        "cantidadDespachada": 10,
+        "cantidadPendiente": 9,
+        "resultado": "PARCIAL",
+        "fillRate": 0.5263,
+        "fechaDespacho": "2026-11-23T00:38:04.436379Z"
+      }
+    },
+    {
+      "caso": "p4_ciclos_de_orden",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ciclos-despacho?ordenId=97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+            "ordenId": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+            "numeroCiclo": 1,
+            "cantidadSolicitada": 19,
+            "cantidadDespachada": 10,
+            "cantidadPendiente": 9,
+            "resultado": "PARCIAL",
+            "fillRate": 0.5263,
+            "fechaDespacho": "2026-11-23T00:38:04.436379Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 1,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 1,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p8_ciclos_de_orden_parcial",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ciclos-despacho?ordenId=97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Los dos ciclos de la orden B.",
+      "body": {
+        "content": [
+          {
+            "id": "8b1dc182-479d-4d36-994a-1022d7b31b8d",
+            "ordenId": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+            "numeroCiclo": 2,
+            "cantidadSolicitada": 11,
+            "cantidadDespachada": 11,
+            "cantidadPendiente": 0,
+            "resultado": "COMPLETO",
+            "fillRate": 1.0,
+            "fechaDespacho": "2026-11-23T00:38:08.851748Z"
+          },
+          {
+            "id": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+            "ordenId": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+            "numeroCiclo": 1,
+            "cantidadSolicitada": 19,
+            "cantidadDespachada": 10,
+            "cantidadPendiente": 9,
+            "resultado": "PARCIAL",
+            "fillRate": 0.5263,
+            "fechaDespacho": "2026-11-23T00:38:04.436379Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p5_ciclos_sin_viaje",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ciclos-despacho?sinViaje=true",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Lo que ve el coordinador para armar un viaje.",
+      "body": {
+        "content": [
+          {
+            "id": "36a64773-4df3-435c-ae0e-911e99107288",
+            "ordenId": "bd68f77c-beab-4a4e-98de-4ab0ba8b1cf0",
+            "numeroCiclo": 1,
+            "cantidadSolicitada": 2,
+            "cantidadDespachada": 2,
+            "cantidadPendiente": 0,
+            "resultado": "COMPLETO",
+            "fillRate": 1.0,
+            "fechaDespacho": "2026-11-23T00:38:04.514293Z"
+          },
+          {
+            "id": "6804ac60-da24-4efd-9834-39a79c976760",
+            "ordenId": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+            "numeroCiclo": 1,
+            "cantidadSolicitada": 15,
+            "cantidadDespachada": 15,
+            "cantidadPendiente": 0,
+            "resultado": "COMPLETO",
+            "fillRate": 1.0,
+            "fechaDespacho": "2026-11-23T00:38:04.471774Z"
+          },
+          {
+            "id": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+            "ordenId": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+            "numeroCiclo": 1,
+            "cantidadSolicitada": 19,
+            "cantidadDespachada": 10,
+            "cantidadPendiente": 9,
+            "resultado": "PARCIAL",
+            "fillRate": 0.5263,
+            "fechaDespacho": "2026-11-23T00:38:04.436379Z"
+          },
+          {
+            "id": "3d6e13b3-fbd0-4729-a62e-56fd66f2757a",
+            "ordenId": "2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7",
+            "numeroCiclo": 1,
+            "cantidadSolicitada": 19,
+            "cantidadDespachada": 19,
+            "cantidadPendiente": 0,
+            "resultado": "COMPLETO",
+            "fillRate": 1.0,
+            "fechaDespacho": "2026-11-23T00:38:04.083883Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 4,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 4,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p5_ciclos_sin_viaje_vacio",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ciclos-despacho?sinViaje=true",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [],
+        "empty": true,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 0,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 0,
+        "totalPages": 0
+      }
+    },
+    {
+      "caso": "err_ciclos_ordenid_invalido",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ciclos-despacho?ordenId=x",
+        "cuerpo": null
+      },
+      "status": 400,
+      "body": {
+        "timestamp": "2026-11-23T00:38:10.650Z",
+        "status": 400,
+        "error": "Bad Request",
+        "path": "/api/v1/ciclos-despacho"
+      }
+    }
+  ]
+}
