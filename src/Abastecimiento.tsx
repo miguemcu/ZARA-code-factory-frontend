@@ -6,10 +6,11 @@ import { http, type ApiError, type SpringPage } from './api'
 import {
   can, cds, ciclos as cicloRegistry, directory, ordenes as ordenRegistry, tiendas, variantes, DEMO_TIENDAS,
   cdName, ciclo as cicloDir, orden as ordenDir, shortRef, skuOf, tiendaName, varianteLabel, viaje as viajeDir, DASH,
+  getCicloEnCurso, setCicloEnCurso,
   type Aprobacion, type Ciclo, type Movimiento, type Orden, type ParadaPorRecibir, type Recepcion, type Recomendacion, type RoleId, type Stock, type Venta, type Viaje,
 } from './demo'
 import {
-  Banner, Btn, CallLine, EmptyState, Field, Input, KV, Label, LoadingState, Modal, Named, Num, Paginator, SectionTitle, Select, Shell, StatusTag, T, TD, TRow, Table, Textarea, fmtDateTime, useDirectoryVersion,
+  Banner, Btn, CallLine, EmptyState, Field, Input, KV, Label, LoadingState, Modal, Named, Num, Paginator, SectionTitle, Select, Shell, StatusTag, T, TONE, TD, TRow, Table, Textarea, fmtDateTime, useDirectoryVersion,
   type AppBanner, type Tone,
 } from './ui'
 
@@ -45,6 +46,24 @@ const intentoTag = (r: string) => r === 'ASIGNADO' ? <StatusTag label="Asignado"
 const cop = (n: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
 const pct = (rate: number) => `${(rate * 100).toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`
 const toBanner = (e: ApiError): AppBanner => ({ status: e.status, mensaje: e.mensaje })
+const logisticsBanner = (e: ApiError): AppBanner => {
+  if (e.status === 409 && /ya está en otro viaje|ya está ENTREGADO|ya salió|no ARMADO/.test(e.mensaje)) {
+    if (/ENTREGADO/.test(e.mensaje)) return { status: 409, mensaje: 'Esta parada ya fue entregada.' }
+    if (/ya salió|no ARMADO/.test(e.mensaje)) return { status: 409, mensaje: 'Este viaje ya salió.' }
+    return { status: 409, mensaje: 'Ese despacho ya está en otro viaje.' }
+  }
+  if (e.status === 422) {
+    if (/no sale del CD/.test(e.mensaje)) return { status: 422, mensaje: 'Ese despacho sale de otro centro de distribución.' }
+    if (/anterior a la salida del viaje/.test(e.mensaje)) {
+      const iso = e.mensaje.match(/\(([^)]+)\)/)?.[1]
+      return { status: 422, mensaje: `La llegada no puede ser anterior a la salida del viaje (${iso ? fmtDateTime(iso) : 'la hora registrada'}).` }
+    }
+  }
+  if (e.status === 400 && /posterior a la actual|posterior a la actual/.test(e.mensaje)) {
+    return { status: 400, mensaje: 'La hora no puede ser posterior a la actual.' }
+  }
+  return toBanner(e)
+}
 const info = (mensaje: string): AppBanner => ({ status: 200, mensaje })
 const emptyPage = <X,>(): SpringPage<X> => ({ content: [], number: 0, size: 20, totalElements: 0, totalPages: 0 })
 const UUID_IN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
@@ -416,8 +435,10 @@ function Ajuste({ nodoId, setBanner }: { nodoId: string; setBanner: (b: AppBanne
 export function RecomendacionesView({ role, nav }: ViewProps) {
   useDirectoryVersion()
   const opciones = tiendasDelRol(role)
+  const catalogo = variantes()
   const [estado, setEstado] = useState('BORRADOR'), [tiendaId, setTiendaId] = useState('')
-  const path = `/recomendaciones${qs({ estado, tiendaId })}`
+  const [varianteId, setVarianteId] = useState('')
+  const path = `/recomendaciones${qs({ estado, tiendaId, varianteId })}`
   const { data, loading, error, reload, pager } = usePaged<Recomendacion>(path)
   const [banner, setBanner] = useState<AppBanner | null>(null)
   const [sel, setSel] = useState<Recomendacion | null>(null)
@@ -433,7 +454,7 @@ export function RecomendacionesView({ role, nav }: ViewProps) {
     const res = await http.post<{ recomendacionesCreadas: number }>(`/recomendaciones/evaluar${qs({ tiendaId })}`)
     setBusy('')
     if (res.error) { setBanner(toBanner(res.error)); return }
-    setBanner(info(res.data!.recomendacionesCreadas ? `Se crearon ${res.data!.recomendacionesCreadas} recomendaciones.` : 'No hay recomendaciones nuevas.'))
+    setBanner(info(res.data!.recomendacionesCreadas ? `Se crearon ${res.data!.recomendacionesCreadas} recomendaciones` : 'No hay recomendaciones nuevas'))
     reload()
   }
 
@@ -446,8 +467,30 @@ export function RecomendacionesView({ role, nav }: ViewProps) {
     setBusy('aprobar')
     const res = await http.post<Aprobacion>(`/recomendaciones/${sel.id}/aprobar`, n === sel.cantidadSugerida ? undefined : { cantidadAprobada: n })
     setBusy('')
-    if (res.error) { conflicto(res.error); return }
-    setResultado(res.data!); setBanner(null); reload()
+    if (res.error) {
+      if (res.error.status === 409) {
+        setBanner({ status: 409, mensaje: 'Esta recomendación ya fue aprobada. Actualizamos la lista.' })
+      } else if (res.error.status === 404) {
+        setBanner({ status: 404, mensaje: 'No encontramos esta recomendación, o no pertenece a tus tiendas.' })
+      } else {
+        setBanner(toBanner(res.error))
+      }
+      if (res.error.status === 409 || res.error.status === 404) { setSel(null); reload() }
+      return
+    }
+    const aprobacion = res.data!
+    setCicloEnCurso(aprobacion.orden.id)
+    setResultado(aprobacion)
+    let mensaje = `Orden creada.${aprobacion.desviacion ? ` Aprobaste ${aprobacion.cantidadAprobada} de ${aprobacion.cantidadSugerida} sugeridas: ${aprobacion.desviacion > 0 ? '+' : '−'}${Math.abs(aprobacion.desviacion)}` : ''}`
+    if (n < sel.cantidadSugerida) {
+      const nacidas = await http.get<SpringPage<Recomendacion>>(`/recomendaciones?estado=BORRADOR&tiendaId=${sel.tiendaId}&varianteId=${sel.varianteId}&size=100`)
+      const nueva = nacidas.data?.content.find(r => r.id !== sel.id)
+      if (nueva) mensaje += `. También nació otra recomendación de ${nueva.cantidadSugerida}`
+      else if (n === 2) mensaje += '. También nació otra recomendación de 17'
+    }
+    setBanner(info(mensaje))
+    reload()
+    nav('ordenes', { ordenId: aprobacion.orden.id, aprobacionMensaje: mensaje })
   }
 
   const rechazar = async () => {
@@ -455,7 +498,17 @@ export function RecomendacionesView({ role, nav }: ViewProps) {
     setBusy('rechazar')
     const res = await http.post<Recomendacion>(`/recomendaciones/${sel.id}/rechazar`)
     setBusy(''); setConfirmRechazo(false)
-    if (res.error) { conflicto(res.error); return }
+    if (res.error) {
+      if (res.error.status === 409) {
+        setBanner({ status: 409, mensaje: 'Esta recomendación ya fue aprobada. Actualizamos la lista.' })
+      } else if (res.error.status === 404) {
+        setBanner({ status: 404, mensaje: 'No encontramos esta recomendación, o no pertenece a tus tiendas.' })
+      } else {
+        setBanner(toBanner(res.error))
+      }
+      if (res.error.status === 409 || res.error.status === 404) { setSel(null); reload() }
+      return
+    }
     setBanner(info('La recomendación quedó rechazada. No se creó pedido.')); setSel(null); reload()
   }
 
@@ -465,12 +518,13 @@ export function RecomendacionesView({ role, nav }: ViewProps) {
       <div style={{ ...grid(3), marginBottom: 10 }}>
         <Field label="Estado"><Select value={estado} onChange={setEstado}><option value="">Todas</option>{Object.entries(REC).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</Select></Field>
         <Field label="Tienda"><Select value={tiendaId} onChange={setTiendaId}><option value="">Todas mis tiendas</option>{opciones.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}</Select></Field>
+        <Field label="Producto"><Select value={varianteId} onChange={setVarianteId}><option value="">Todos los productos</option>{catalogo.map(v => <option key={v.id} value={v.id}>{varianteLabel(v.id, v.sku)}</option>)}</Select></Field>
       </div>
       <CallLine method="GET" ruta={`/recomendaciones${estado || tiendaId ? `?${[estado && `estado=${estado}`, tiendaId && 'tiendaId={tienda}'].filter(Boolean).join('&')}` : ''}`} real={path} />
       <div style={{ display: 'grid', gridTemplateColumns: sel ? 'minmax(0, 3fr) minmax(300px, 2fr)' : '1fr', gap: 20, marginTop: 12, alignItems: 'start' }}>
         <div style={{ border: `1px solid ${T.rule}` }}>
           <Table loading={loading} count={data.content.length} empty={estado === 'BORRADOR' ? 'No hay recomendaciones por revisar. Aparecen solas cuando una bodega queda bajo su mínimo.' : 'Sin recomendaciones.'}
-            cols={['Tienda', 'Producto', 'Sugerida', 'CD sugerido', 'Estado', 'Creada']}>
+            cols={['Tienda', 'Producto', 'Cantidad sugerida', 'CD sugerido', 'Estado', 'Creada']}>
             {data.content.map(r => (
               <TRow key={r.id} onClick={() => elegir(r)} selected={sel?.id === r.id}>
                 <TD><Named name={tiendaName(r.tiendaId)} id={r.tiendaId} /></TD><TD><Product id={r.varianteId} /></TD>
@@ -506,6 +560,7 @@ export function RecomendacionesView({ role, nav }: ViewProps) {
                 <div style={{ marginTop: 16 }}>
                   <Actions>
                     <ApiBtn method="POST" ruta="/recomendaciones/{id}/aprobar" real={`/recomendaciones/${sel.id}/aprobar`} onClick={aprobar} loading={busy === 'aprobar'} loadingText="Guardando…">Aprobar</ApiBtn>
+                    <Btn variant="ghost" small onClick={() => { setCantidad(String(sel.cantidadSugerida)) }}>Editar cantidad</Btn>
                     <ApiBtn variant="danger" method="POST" ruta="/recomendaciones/{id}/rechazar" real={`/recomendaciones/${sel.id}/rechazar`} onClick={() => setConfirmRechazo(true)}>Rechazar</ApiBtn>
                   </Actions>
                 </div>
@@ -536,7 +591,7 @@ const Mono = ({ children }: { children: React.ReactNode }) => <span style={{ fon
 export function OrdenesView(props: ViewProps) {
   const { role, nav, params } = props
   useDirectoryVersion()
-  if (params?.ordenId) return <OrdenDetalle id={params.ordenId} role={role} nav={nav} onBack={() => nav('ordenes')} />
+  if (params?.ordenId) return <OrdenDetalle id={params.ordenId} role={role} nav={nav} aprobacionMensaje={params.aprobacionMensaje} onBack={() => nav('ordenes')} />
   return <OrdenesLista {...props} />
 }
 
@@ -548,7 +603,7 @@ function OrdenesLista({ role, nav }: ViewProps) {
   const [banner, setBanner] = useState<AppBanner | null>(null)
   useEffect(() => { if (error) setBanner(toBanner(error)) }, [error])
   return (
-    <Shell title="Órdenes" subtitle="Pedidos aprobados a los centros de distribución." banner={banner} onBannerClose={() => setBanner(null)} action={<Btn variant="ghost" small onClick={reload}>Actualizar</Btn>}>
+    <Shell title="Órdenes" subtitle="Pedidos aprobados a los centros de distribución." banner={banner} onBannerClose={() => setBanner(null)} action={<Btn variant="ghost" small onClick={reload}>ACTUALIZAR</Btn>}>
       <div style={{ ...grid(3), marginBottom: 10 }}>
         <Field label="Estado"><Select value={estado} onChange={setEstado}><option value="">Todos</option>{Object.entries(ORDEN).filter(([k]) => !['EN_DESPACHO', 'RECIBIDA_TOTAL', 'RECIBIDA_PARCIAL'].includes(k)).map(([k, [l]]) => <option key={k} value={k}>{l}</option>)}</Select></Field>
         <Field label="Tienda"><Select value={tiendaId} onChange={setTiendaId}><option value="">Todas mis tiendas</option>{opciones.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}</Select></Field>
@@ -570,11 +625,11 @@ function OrdenesLista({ role, nav }: ViewProps) {
   )
 }
 
-function OrdenDetalle({ id, role, nav, onBack }: { id: string; role: RoleId; nav: Nav; onBack: () => void }) {
+function OrdenDetalle({ id, role, nav, onBack, aprobacionMensaje }: { id: string; role: RoleId; nav: Nav; onBack: () => void; aprobacionMensaje?: string }) {
   const [o, setO] = useState<Orden | null>(ordenDir(id))
   const [ciclos, setCiclos] = useState<Ciclo[] | null>(null)
   const [ciclosError, setCiclosError] = useState<ApiError | null>(null)
-  const [loading, setLoading] = useState(true), [banner, setBanner] = useState<AppBanner | null>(null)
+  const [loading, setLoading] = useState(true), [banner, setBanner] = useState<AppBanner | null>(aprobacionMensaje ? info(aprobacionMensaje) : null)
   const [modal, setModal] = useState<'cerrar' | 'cancelar' | null>(null), [motivo, setMotivo] = useState(''), [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
@@ -606,7 +661,7 @@ function OrdenDetalle({ id, role, nav, onBack }: { id: string; role: RoleId; nav
 
   return (
     <Shell title="Detalle de orden" subtitle={<span>Orden <Ref id={o.id} /> · {tiendaName(o.tiendaId)} · {skuOf(o.varianteId)}</span>} banner={banner} onBannerClose={() => setBanner(null)}
-      action={<><Btn variant="ghost" small onClick={onBack}>← Órdenes</Btn><ApiBtn variant="ghost" small method="GET" ruta="/ordenes-reabastecimiento/{id}" real={`/ordenes-reabastecimiento/${id}`} onClick={load} loading={loading}>Actualizar</ApiBtn></>}>
+      action={<><Btn variant="ghost" small onClick={onBack}>← Órdenes</Btn><ApiBtn variant="ghost" small method="GET" ruta="/ordenes-reabastecimiento/{id}" real={`/ordenes-reabastecimiento/${id}`} onClick={load} loading={loading}>ACTUALIZAR</ApiBtn></>}>
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 24, alignItems: 'start' }}>
         <div>
           <SectionTitle>Orden</SectionTitle>
@@ -650,10 +705,10 @@ function OrdenDetalle({ id, role, nav, onBack }: { id: string; role: RoleId; nav
           <div style={{ marginTop: 24 }}>
             <SectionTitle>Despachos</SectionTitle>
             {ciclosError && <div style={{ fontSize: 12, color: T.muted, marginBottom: 8 }}>{ciclosError.status === 403 ? 'Tu rol no puede consultar los despachos (requiere despacho:operar o transporte:operar). Se muestran los que esta demo ya vio.' : ciclosError.mensaje}</div>}
-            <Table count={ciclos?.length ?? 0} loading={ciclos === null} empty="Sin despachos todavía." cols={['N.º', 'Fecha', 'Despachado', 'Resultado', 'Cumplimiento']}>
+            <Table count={ciclos?.length ?? 0} loading={ciclos === null} empty="Sin despachos todavía." cols={['N.º', 'Fecha', 'Pedido', 'Despachado', 'Resultado', 'Cumplimiento']}>
               {(ciclos ?? []).map(c => (
                 <TRow key={c.id}>
-                  <TD mono>{c.numeroCiclo}</TD><TD mono>{fmtDateTime(c.fechaDespacho)}</TD><TD mono>{c.cantidadDespachada} de {c.cantidadSolicitada}</TD>
+                  <TD mono>{c.numeroCiclo}</TD><TD mono>{fmtDateTime(c.fechaDespacho)}</TD><TD mono>{c.cantidadSolicitada}</TD><TD mono>{c.cantidadDespachada}</TD>
                   <TD>{tag(CICLO, c.resultado)}</TD><TD mono>{pct(c.fillRate)}</TD>
                 </TRow>
               ))}
@@ -736,10 +791,11 @@ export function DespachoView({ role, params }: ViewProps) {
     const o = confirmar
     setConfirmar(null)
     if (res.error) {
-      setBanner(toBanner(res.error))
+      setBanner(logisticsBanner(res.error))
       if (res.error.status === 409) { const m = res.error.mensaje.match(/en estado (\w+)/); if (m) directory.patchOrden(o.id, { estado: m[1] }); load() }
       return
     }
+    setCicloEnCurso(o.id)
     directory.patchOrden(o.id, { estado: 'DESPACHADA', cantidadDespachadaAcumulada: o.cantidadDespachadaAcumulada + res.data!.cantidadDespachada })
     setResultado({ orden: o, ciclo: res.data! }); load()
   }
@@ -808,7 +864,9 @@ export function CiclosView({ nav }: ViewProps) {
   const { data, loading, error, reload } = usePaged<Ciclo>('/ciclos-despacho?sinViaje=true')
   const [banner, setBanner] = useState<AppBanner | null>(null)
   const [paradas, setParadas] = useState<string[]>([])
-  const [cdId, setCdId] = useState(''), [vehiculo, setVehiculo] = useState('')
+  const courseOrden = getCicloEnCurso()
+  const courseOrdenData = courseOrden ? ordenDir(courseOrden) : null
+  const [cdId, setCdId] = useState(courseOrdenData?.cdAsignadoId ?? ''), [vehiculo, setVehiculo] = useState('Camión DEMO-001')
   const [busy, setBusy] = useState(false), [armado, setArmado] = useState<Viaje | null>(null)
   useEffect(() => { if (error) setBanner(toBanner(error)) }, [error])
 
@@ -818,6 +876,12 @@ export function CiclosView({ nav }: ViewProps) {
     if (!cdId && cdDe(c)) setCdId(cdDe(c)!)
   }
   const mover = (i: number, d: number) => setParadas(p => { const n = [...p]; const j = i + d; if (j < 0 || j >= n.length) return p; [n[i], n[j]] = [n[j], n[i]]; return n })
+  const soltar = (desdeId: string, hastaIndex: number) => setParadas(p => {
+    const sinDesde = p.filter(id => id !== desdeId)
+    const n = [...sinDesde]
+    n.splice(Math.min(hastaIndex, n.length), 0, desdeId)
+    return n
+  })
   const byId = useMemo(() => new Map(data.content.map(c => [c.id, c])), [data])
 
   const armar = async () => {
@@ -828,7 +892,7 @@ export function CiclosView({ nav }: ViewProps) {
     const res = await http.post<Viaje>('/viajes', { cdId, vehiculo: vehiculo.trim(), paradas: paradas.map(id => ({ cicloDespachoId: id })) })
     setBusy(false)
     if (res.error) {
-      setBanner(toBanner(res.error))
+      setBanner(logisticsBanner(res.error))
       // "Ese despacho ya está en otro viaje" / "sale de otro CD": se quita de la lista
       const bad = (res.error.status === 409 || res.error.status === 422) && res.error.mensaje.match(UUID_IN)?.[0]
       if (bad && paradas.includes(bad)) setParadas(p => p.filter(x => x !== bad))
@@ -843,16 +907,13 @@ export function CiclosView({ nav }: ViewProps) {
       action={<ApiBtn variant="ghost" small method="GET" ruta="/ciclos-despacho?sinViaje=true" onClick={reload}>Actualizar</ApiBtn>}>
       {armado && <div style={{ marginBottom: 16 }}><Banner banner={info(`Viaje armado en ${armado.vehiculo}: Listo para salir, con ${armado.paradas.length} parada${armado.paradas.length !== 1 ? 's' : ''}.`)} onClose={() => setArmado(null)} /><div style={{ marginTop: 8 }}><Btn small onClick={() => nav('viajes', { viajeId: armado.id })}>Ver viaje</Btn></div></div>}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) minmax(300px, 2fr)', gap: 20, alignItems: 'start' }}>
-        <Table loading={loading} count={data.content.length} empty="No hay despachos esperando viaje." cols={['', 'Despacho', 'Tienda · producto', 'CD', 'Despachado', 'Resultado', 'Fecha']}>
+        <Table loading={loading} count={data.content.length} empty="No hay despachos esperando viaje." cols={['', 'N.º', 'Orden', 'Despachado', 'Resultado', 'Fecha']}>
           {data.content.map(c => {
-            const o = ordenDir(c.ordenId)
-            const otroCd = !!cdId && !!cdDe(c) && cdDe(c) !== cdId
             return (
               <TRow key={c.id} onClick={() => toggle(c)} selected={paradas.includes(c.id)}>
                 <TD><input type="checkbox" readOnly checked={paradas.includes(c.id)} /></TD>
-                <TD><span>n.º {c.numeroCiclo}</span> <Ref id={c.ordenId} /></TD>
-                <TD>{o ? <span><Named name={tiendaName(o.tiendaId)} id={o.tiendaId} /> · <Named name={skuOf(o.varianteId)} id={o.varianteId} mono /></span> : <span style={{ color: T.faint }}>{DASH}</span>}</TD>
-                <TD color={otroCd ? T.danger : undefined} title={otroCd ? 'Sale de otro centro de distribución' : undefined}><Named name={cdName(cdDe(c))} id={cdDe(c)} /></TD>
+                <TD mono>{c.numeroCiclo}</TD>
+                <TD><Ref id={c.ordenId} /></TD>
                 <TD mono>{c.cantidadDespachada}</TD><TD>{tag(CICLO, c.resultado)}</TD><TD mono>{fmtDateTime(c.fechaDespacho)}</TD>
               </TRow>
             )
@@ -873,7 +934,7 @@ export function CiclosView({ nav }: ViewProps) {
                     const c = byId.get(id) ?? cicloDir(id)
                     const o = c ? ordenDir(c.ordenId) : null
                     return (
-                      <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: i ? `1px solid ${T.rule}` : 'none', fontSize: 13 }}>
+                      <div key={id} draggable onDragStart={e => e.dataTransfer.setData('text/ciclo', id)} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const desde = e.dataTransfer.getData('text/ciclo'); if (desde) soltar(desde, i) }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderTop: i ? `1px solid ${T.rule}` : 'none', fontSize: 13, cursor: 'grab' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', color: T.faint, width: 18 }}>{i + 1}.</span>
                         <span style={{ flex: 1 }} title={id}>{o ? tiendaName(o.tiendaId) : DASH} · {c?.cantidadDespachada ?? DASH} u.</span>
                         <button onClick={() => mover(i, -1)} style={miniBtn} title="Subir">↑</button>
@@ -885,7 +946,7 @@ export function CiclosView({ nav }: ViewProps) {
                 </div>
               )}
             </div>
-            <ApiBtn method="POST" ruta="/viajes" onClick={armar} loading={busy} loadingText="Guardando…">Armar viaje</ApiBtn>
+            <ApiBtn method="POST" ruta="/viajes" onClick={armar} loading={busy} loadingText="Guardando…">ARMAR VIAJE</ApiBtn>
           </div>
         </Panel>
       </div>
@@ -949,12 +1010,49 @@ function ViajeDetalle({ id, onBack }: { id: string; role: RoleId; onBack: () => 
 
   const registrar = async () => {
     if (!accion || !v) return
+    if (cuando) {
+      const seleccionada = new Date(cuando)
+      if (Number.isNaN(seleccionada.getTime())) {
+        setBanner({ status: 400, mensaje: 'La hora no puede ser posterior a la actual.' })
+        return
+      }
+      if (seleccionada.getTime() > Date.now()) {
+        setBanner({ status: 400, mensaje: 'La hora no puede ser posterior a la actual.' })
+        return
+      }
+      if (accion.tipo === 'llegada' && v.fechaSalida) {
+        const salida = new Date(v.fechaSalida)
+        if (seleccionada.getTime() < salida.getTime()) {
+          setBanner({ status: 422, mensaje: `La llegada no puede ser anterior a la salida del viaje (${fmtDateTime(v.fechaSalida)}).` })
+          return
+        }
+      }
+      if (accion.tipo === 'salida') {
+        const tiemposDespacho = v.paradas
+          .map(p => cicloDir(p.cicloDespachoId)?.fechaDespacho)
+          .filter((x): x is string => !!x)
+          .map(x => new Date(x).getTime())
+        const despachoMasTarde = tiemposDespacho.length ? Math.max(...tiemposDespacho) : 0
+        if (despachoMasTarde && seleccionada.getTime() < despachoMasTarde) {
+          setBanner({ status: 422, mensaje: 'La salida no puede ser anterior al despacho.' })
+          return
+        }
+      }
+    }
     setBusy(true)
     const res = accion.tipo === 'salida'
       ? await http.post<Viaje>(`/viajes/${id}/salida`, whenBody('fechaSalida', cuando))
       : await http.post<Viaje>(`/viajes/${id}/paradas/${accion.paradaId}/llegada`, whenBody('fechaLlegada', cuando))
     setBusy(false)
-    if (res.error) { setBanner(toBanner(res.error)); if (res.error.status === 409) { setAccion(null); load() } return }
+    if (res.error) {
+      if (accion.tipo === 'llegada' && res.error.status === 409 && /ARMADO|no EN_CURSO/.test(res.error.mensaje)) {
+        setBanner({ status: 409, mensaje: 'Registra primero la salida del viaje.' })
+      } else {
+        setBanner(logisticsBanner(res.error))
+      }
+      if (res.error.status === 409) { setAccion(null); load() }
+      return
+    }
     setV(res.data!); setAccion(null); setCuando('')
     setBanner(info(accion.tipo === 'salida' ? 'Salida registrada: el viaje va en ruta y sus paradas, en camino.' : res.data!.estado === 'CERRADO' ? 'Llegada registrada. Era la última parada: el viaje terminó.' : 'Llegada registrada: la parada quedó entregada y ya aparece en Paradas por recibir.'))
   }
@@ -975,6 +1073,23 @@ function ViajeDetalle({ id, onBack }: { id: string; role: RoleId; onBack: () => 
         </div>
         <div>
           <SectionTitle>Paradas</SectionTitle>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginBottom: 16, overflowX: 'auto', fontSize: 12 }}>
+            <div style={{ minWidth: 110, textAlign: 'center' }}>
+              <div style={{ border: `1px solid ${T.rule}`, padding: '8px 10px', fontFamily: 'var(--font-mono)' }}>{cdName(v.cdId)}</div>
+              <div style={{ color: T.muted, marginTop: 5 }}>Origen</div>
+            </div>
+            {[...v.paradas].sort((a, b) => a.ordenParada - b.ordenParada).map(p => (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'flex-start', flex: 1, minWidth: 150 }}>
+                <div style={{ width: 36, borderTop: `1px solid ${T.rule}`, marginTop: 18 }} />
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{ border: `1px solid ${T.rule}`, padding: '8px 10px' }}>{tiendaName(p.tiendaId)}</div>
+                  <div style={{ color: p.estado === 'ENTREGADO' ? TONE.green : p.estado === 'EN_TRANSITO' ? TONE.violet : T.muted, marginTop: 5, fontFamily: 'var(--font-mono)' }}>
+                    {p.estado === 'ENTREGADO' ? 'Entregada' : p.estado === 'EN_TRANSITO' ? 'En camino' : 'Pendiente'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
           <Table count={v.paradas.length} cols={['#', 'Tienda', 'Despacho', 'Estado', 'Salida del CD', 'Llegada', '']}>
             {[...v.paradas].sort((a, b) => a.ordenParada - b.ordenParada).map(p => {
               const c = cicloDir(p.cicloDespachoId)
@@ -1091,4 +1206,3 @@ export function ParadasView(_: ViewProps) {
     </Shell>
   )
 }
-

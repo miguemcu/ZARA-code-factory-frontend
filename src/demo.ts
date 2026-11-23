@@ -163,6 +163,12 @@ export const ciclos = () => Object.values(learned.ciclos)
 export const viaje = (id?: string | null) => id ? learned.viajes[id] ?? null : null
 export const recomendacion = (id?: string | null) => id ? learned.recomendaciones[id] ?? null : null
 
+// Ciclo aprobado en curso: permite al Operador ver/despachar aunque la API no
+// permita listar órdenes y permite al Coordinador usar el CD correcto al armar el viaje.
+let cicloEnCursoOrdenId: string | null = null
+export const setCicloEnCurso = (ordenId: string | null) => { cicloEnCursoOrdenId = ordenId }
+export const getCicloEnCurso = () => cicloEnCursoOrdenId
+
 // ─── Textos para pantalla ───────────────────────────────────────────────────
 
 export const DASH = '—'
