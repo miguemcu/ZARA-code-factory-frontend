@@ -1,0 +1,1887 @@
+{
+  "pantalla": "Inventario por nodo",
+  "descripcion": "Almacén, Bodega y CD con sus cinco magnitudes, y el kardex.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "p1_inventario_almacen_centro",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/4b5508c1-910d-4360-99dc-bdf8cc3a8c7b/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Tras la venta: el traspaso automático dejó el Almacén en 6 (AZ-M).",
+      "body": {
+        "content": [
+          {
+            "nodoId": "4b5508c1-910d-4360-99dc-bdf8cc3a8c7b",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "aLaMano": 6,
+            "disponibleParaUso": 6,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 6
+          },
+          {
+            "nodoId": "4b5508c1-910d-4360-99dc-bdf8cc3a8c7b",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "aLaMano": 2,
+            "disponibleParaUso": 2,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 2
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p1_inventario_bodega_centro",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/0fe4ef24-652a-45ab-b569-67924f44214d/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Tras la venta: la Bodega quedó en 1 (AZ-M), bajo su nivel 5.",
+      "body": {
+        "content": [
+          {
+            "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "aLaMano": 1,
+            "disponibleParaUso": 1,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 1
+          },
+          {
+            "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "aLaMano": 6,
+            "disponibleParaUso": 6,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 6
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p3_inventario_cd_principal",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Tras aprobar: saliente = reservas vivas en el CD.",
+      "body": {
+        "content": [
+          {
+            "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "aLaMano": 200,
+            "disponibleParaUso": 166,
+            "entrante": 0,
+            "saliente": 34,
+            "pronosticado": 166
+          },
+          {
+            "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "aLaMano": 200,
+            "disponibleParaUso": 181,
+            "entrante": 0,
+            "saliente": 19,
+            "pronosticado": 181
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p3_inventario_bodega_centro",
+      "rol": "ENCARGADO_BODEGA",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/0fe4ef24-652a-45ab-b569-67924f44214d/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Tras aprobar: entrante 19 en la Bodega.",
+      "body": {
+        "content": [
+          {
+            "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "aLaMano": 1,
+            "disponibleParaUso": 1,
+            "entrante": 19,
+            "saliente": 0,
+            "pronosticado": 20
+          },
+          {
+            "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "aLaMano": 1,
+            "disponibleParaUso": 1,
+            "entrante": 19,
+            "saliente": 0,
+            "pronosticado": 20
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p7_inventario_bodega_centro",
+      "rol": "ENCARGADO_BODEGA",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/0fe4ef24-652a-45ab-b569-67924f44214d/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Tras recibir: AZ-M 20 a la mano; BL-L 9 a la mano y 11 entrante (orden REABIERTA).",
+      "body": {
+        "content": [
+          {
+            "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "aLaMano": 20,
+            "disponibleParaUso": 20,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 20
+          },
+          {
+            "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "aLaMano": 9,
+            "disponibleParaUso": 9,
+            "entrante": 11,
+            "saliente": 0,
+            "pronosticado": 20
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "inv_nodo_cd_200_operador",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "aLaMano": 200,
+            "disponibleParaUso": 200,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 200
+          },
+          {
+            "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "aLaMano": 200,
+            "disponibleParaUso": 200,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 200
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "pag_size_500_se_reduce",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario?size=500",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "size=500 se reduce a 100 sin error.",
+      "body": {
+        "content": [
+          {
+            "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "aLaMano": 166,
+            "disponibleParaUso": 166,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 166
+          },
+          {
+            "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "aLaMano": 39,
+            "disponibleParaUso": 39,
+            "entrante": 0,
+            "saliente": 0,
+            "pronosticado": 39
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 100,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 100,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "inv_nodo_cd_404_vendedor",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario",
+        "cuerpo": null
+      },
+      "status": 404,
+      "nota": "Nodo fuera del alcance del usuario: 404 aunque exista.",
+      "body": {
+        "mensaje": "El nodo 45cce843-da27-4a5e-8b73-2d2bac826b30 no existe"
+      }
+    },
+    {
+      "caso": "lookup_stock_variante_200_vendedor",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/variantes/ce457d78-460f-4997-b22e-a491f579fe36/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Stock de una variante en los nodos visibles. No dice de qué tipo es cada nodo.",
+      "body": [
+        {
+          "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "sku": "DEMO-S3-AZ-M",
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        {
+          "nodoId": "4b5508c1-910d-4360-99dc-bdf8cc3a8c7b",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "sku": "DEMO-S3-AZ-M",
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        },
+        {
+          "nodoId": "c4e696a8-f7b7-4e76-a35d-a2346f41b28b",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "sku": "DEMO-S3-AZ-M",
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        {
+          "nodoId": "e77acc97-5bc2-4767-9f6f-42b40bd67aba",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "sku": "DEMO-S3-AZ-M",
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        }
+      ]
+    },
+    {
+      "caso": "lookup_stock_variante_200_operador",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/variantes/ce457d78-460f-4997-b22e-a491f579fe36/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": [
+        {
+          "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "sku": "DEMO-S3-AZ-M",
+          "aLaMano": 200,
+          "disponibleParaUso": 200,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 200
+        },
+        {
+          "nodoId": "daf8589f-432b-4944-b410-c2ef240d20e8",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "sku": "DEMO-S3-AZ-M",
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      ]
+    },
+    {
+      "caso": "lookup_stock_variante_200_coordinador",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/variantes/ce457d78-460f-4997-b22e-a491f579fe36/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "El coordinador no tiene tiendas asignadas ni ve CDs: lista vacía.",
+      "body": []
+    },
+    {
+      "caso": "p8_stock_variante_bl_planificador",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/variantes/e8a1af1e-d171-417f-97c7-fe6a3e4d7253/inventario",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": [
+        {
+          "nodoId": "0fe4ef24-652a-45ab-b569-67924f44214d",
+          "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+          "sku": "DEMO-S3-BL-L",
+          "aLaMano": 20,
+          "disponibleParaUso": 20,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 20
+        },
+        {
+          "nodoId": "4b5508c1-910d-4360-99dc-bdf8cc3a8c7b",
+          "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+          "sku": "DEMO-S3-BL-L",
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        {
+          "nodoId": "c4e696a8-f7b7-4e76-a35d-a2346f41b28b",
+          "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+          "sku": "DEMO-S3-BL-L",
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 2,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        {
+          "nodoId": "e77acc97-5bc2-4767-9f6f-42b40bd67aba",
+          "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+          "sku": "DEMO-S3-BL-L",
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      ]
+    },
+    {
+      "caso": "p1_kardex_almacen_centro",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/4b5508c1-910d-4360-99dc-bdf8cc3a8c7b/inventario/movimientos",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "895479fb-0401-49dc-ad84-c9781b03d868",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "CARGA_INICIAL",
+            "cantidad": 2,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": "d9d0887c-d2eb-48b7-86b3-02508c0d1e79",
+            "ocurridoEn": "2026-11-23T00:37:44.206269Z"
+          },
+          {
+            "id": "2ecbe913-c05a-4395-af39-cb03859f681c",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "CARGA_INICIAL",
+            "cantidad": 2,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": "d9d0887c-d2eb-48b7-86b3-02508c0d1e79",
+            "ocurridoEn": "2026-11-23T00:37:44.212244Z"
+          },
+          {
+            "id": "df666776-6876-40dd-bde3-cf5debc42dfa",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "VENTA",
+            "cantidad": -1,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:01.682306Z"
+          },
+          {
+            "id": "4490b43d-2e70-4447-8048-0820532272aa",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "TRASPASO_ENTRADA",
+            "cantidad": 5,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:01.726997Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 4,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 4,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p1_kardex_bodega_centro",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/0fe4ef24-652a-45ab-b569-67924f44214d/inventario/movimientos",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "f29520b5-2d18-46ce-816a-d83a247a6fd8",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "CARGA_INICIAL",
+            "cantidad": 6,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": "d9d0887c-d2eb-48b7-86b3-02508c0d1e79",
+            "ocurridoEn": "2026-11-23T00:37:44.283593Z"
+          },
+          {
+            "id": "05b2ec22-36b5-4149-935f-a673f68c089d",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "CARGA_INICIAL",
+            "cantidad": 6,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": "d9d0887c-d2eb-48b7-86b3-02508c0d1e79",
+            "ocurridoEn": "2026-11-23T00:37:44.288519Z"
+          },
+          {
+            "id": "508d182e-e7a7-45b9-9927-0350bd99fe54",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "TRASPASO_SALIDA",
+            "cantidad": -5,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:01.718338Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 3,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 3,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p4_kardex_cd_principal",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario/movimientos?tipo=DESPACHO",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "fc94ede2-56e3-4fb1-a9ca-1b29142e0400",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "DESPACHO",
+            "cantidad": -19,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:04.090370Z"
+          },
+          {
+            "id": "f6639730-f32b-42cb-9e82-5e3af19d4fb0",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "DESPACHO",
+            "cantidad": -10,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:04.439771Z"
+          },
+          {
+            "id": "90afa2b4-4db6-46e0-9964-d0c0ad9a400b",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "DESPACHO",
+            "cantidad": -15,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:04.474692Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 3,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 3,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p7_kardex_bodega_centro_recepcion",
+      "rol": "ENCARGADO_BODEGA",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/0fe4ef24-652a-45ab-b569-67924f44214d/inventario/movimientos?tipo=RECEPCION",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "924695a6-d6bb-4e47-9142-fce61ed4c537",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "RECEPCION",
+            "cantidad": 19,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:08.205540Z"
+          },
+          {
+            "id": "b19dd668-463d-46ed-b3f5-834976a6a998",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "RECEPCION",
+            "cantidad": 8,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:08.329303Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p8_kardex_bodega_centro",
+      "rol": "ENCARGADO_BODEGA",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/nodos/0fe4ef24-652a-45ab-b569-67924f44214d/inventario/movimientos",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "f29520b5-2d18-46ce-816a-d83a247a6fd8",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "CARGA_INICIAL",
+            "cantidad": 6,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": "d9d0887c-d2eb-48b7-86b3-02508c0d1e79",
+            "ocurridoEn": "2026-11-23T00:37:44.283593Z"
+          },
+          {
+            "id": "05b2ec22-36b5-4149-935f-a673f68c089d",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "CARGA_INICIAL",
+            "cantidad": 6,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": "d9d0887c-d2eb-48b7-86b3-02508c0d1e79",
+            "ocurridoEn": "2026-11-23T00:37:44.288519Z"
+          },
+          {
+            "id": "508d182e-e7a7-45b9-9927-0350bd99fe54",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "TRASPASO_SALIDA",
+            "cantidad": -5,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:01.718338Z"
+          },
+          {
+            "id": "7e4e27a5-1a4b-43db-a897-9364d1c77314",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "TRASPASO_SALIDA",
+            "cantidad": -5,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:02.517377Z"
+          },
+          {
+            "id": "924695a6-d6bb-4e47-9142-fce61ed4c537",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "tipo": "RECEPCION",
+            "cantidad": 19,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:08.205540Z"
+          },
+          {
+            "id": "b19dd668-463d-46ed-b3f5-834976a6a998",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "RECEPCION",
+            "cantidad": 8,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:08.329303Z"
+          },
+          {
+            "id": "98c03aa9-74a3-4181-b213-670ed6900c6e",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "tipo": "RECEPCION",
+            "cantidad": 11,
+            "motivo": null,
+            "comentario": null,
+            "forzado": false,
+            "usuarioId": null,
+            "ocurridoEn": "2026-11-23T00:38:09.965074Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 7,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 7,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p1_traspasos_centro",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas/abed0b85-7532-4edd-9f0b-abcb3b885bad/traspasos-internos",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Traspaso automático Bodega -> Almacén creado por la venta.",
+      "body": [
+        {
+          "id": "06487a64-4964-46bb-86f5-065143c36f25",
+          "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "cantidad": 5,
+          "origen": "AUTOMATICO",
+          "registradoPor": null,
+          "timestampTraspaso": "2026-11-23T00:38:01.709332Z"
+        }
+      ]
+    },
+    {
+      "caso": "p4_ajuste_merma_cd_201",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario/ajustes",
+        "cuerpo": {
+          "sku": "DEMO-S3-BL-L",
+          "delta": -190,
+          "motivo": "MERMA",
+          "comentario": "Demo: deja 10 a la mano para un despacho parcial"
+        }
+      },
+      "status": 201,
+      "nota": "ADMIN: merma en el CD para forzar el despacho parcial.",
+      "body": {
+        "movimientoId": "6bd129fe-33fb-49f7-b9c4-3a62ec9b5af6",
+        "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+        "sku": "DEMO-S3-BL-L",
+        "delta": -190,
+        "motivo": "MERMA",
+        "comentario": "Demo: deja 10 a la mano para un despacho parcial",
+        "aLaMano": 10,
+        "ocurridoEn": "2026-11-23T00:38:04.199589226Z"
+      }
+    },
+    {
+      "caso": "p4_ajuste_400_negativo",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario/ajustes",
+        "cuerpo": {
+          "sku": "DEMO-S3-BL-L",
+          "delta": -1000,
+          "motivo": "MERMA"
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "El ajuste dejaría el stock en negativo: a la mano=10, delta=-1000"
+      }
+    },
+    {
+      "caso": "p4_ajuste_400_motivo_invalido",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario/ajustes",
+        "cuerpo": {
+          "sku": "DEMO-S3-BL-L",
+          "delta": -1,
+          "motivo": "ROBO"
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "motivo: debe ser CONTEO_FISICO, INGRESO_MANUAL, MERMA o CORRECCION"
+      }
+    },
+    {
+      "caso": "p8_ajuste_ingreso_cd_201",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/nodos/45cce843-da27-4a5e-8b73-2d2bac826b30/inventario/ajustes",
+        "cuerpo": {
+          "sku": "DEMO-S3-BL-L",
+          "delta": 50,
+          "motivo": "INGRESO_MANUAL",
+          "comentario": "Demo: llega mercancía al CD"
+        }
+      },
+      "status": 201,
+      "body": {
+        "movimientoId": "e86f2022-a917-403f-b61a-acf2444411d3",
+        "nodoId": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+        "sku": "DEMO-S3-BL-L",
+        "delta": 50,
+        "motivo": "INGRESO_MANUAL",
+        "comentario": "Demo: llega mercancía al CD",
+        "aLaMano": 50,
+        "ocurridoEn": "2026-11-23T00:38:08.833306071Z"
+      }
+    }
+  ],
+  "secuenciaDeMagnitudes": {
+    "nota": "Valores de GET /nodos/{nodoId}/inventario (como ADMIN) en cada momento del recorrido, resumidos por SKU (sufijo -AZ-M / -BL-L). Nodos: cdPrincipal, cdSinStock, almacenCentro, bodegaCentro, almacenNorte, bodegaNorte.",
+    "inicial": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 200,
+          "disponibleParaUso": 200,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 200
+        },
+        "BL-L": {
+          "aLaMano": 200,
+          "disponibleParaUso": 200,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 200
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        },
+        "BL-L": {
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        },
+        "BL-L": {
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      }
+    },
+    "tras_venta_centro_az": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 200,
+          "disponibleParaUso": 200,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 200
+        },
+        "BL-L": {
+          "aLaMano": 200,
+          "disponibleParaUso": 200,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 200
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 1
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        },
+        "BL-L": {
+          "aLaMano": 2,
+          "disponibleParaUso": 2,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 2
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      }
+    },
+    "tras_aprobar": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 200,
+          "disponibleParaUso": 166,
+          "entrante": 0,
+          "saliente": 34,
+          "pronosticado": 166
+        },
+        "BL-L": {
+          "aLaMano": 200,
+          "disponibleParaUso": 181,
+          "entrante": 0,
+          "saliente": 19,
+          "pronosticado": 181
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 3,
+          "disponibleParaUso": 1,
+          "entrante": 0,
+          "saliente": 2,
+          "pronosticado": 1
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 15,
+          "saliente": 0,
+          "pronosticado": 16
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 2,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      }
+    },
+    "tras_merma": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 181,
+          "disponibleParaUso": 166,
+          "entrante": 0,
+          "saliente": 15,
+          "pronosticado": 166
+        },
+        "BL-L": {
+          "aLaMano": 10,
+          "disponibleParaUso": -9,
+          "entrante": 0,
+          "saliente": 19,
+          "pronosticado": -9
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 3,
+          "disponibleParaUso": 1,
+          "entrante": 0,
+          "saliente": 2,
+          "pronosticado": 1
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 15,
+          "saliente": 0,
+          "pronosticado": 16
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 2,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      }
+    },
+    "tras_despacho": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 166,
+          "disponibleParaUso": 166,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 166
+        },
+        "BL-L": {
+          "aLaMano": 0,
+          "disponibleParaUso": -9,
+          "entrante": 0,
+          "saliente": 9,
+          "pronosticado": -9
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 1
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 15,
+          "saliente": 0,
+          "pronosticado": 16
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 2,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      }
+    },
+    "tras_llegada": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 166,
+          "disponibleParaUso": 166,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 166
+        },
+        "BL-L": {
+          "aLaMano": 0,
+          "disponibleParaUso": -9,
+          "entrante": 0,
+          "saliente": 9,
+          "pronosticado": -9
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 1
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 19,
+          "saliente": 0,
+          "pronosticado": 20
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 15,
+          "saliente": 0,
+          "pronosticado": 16
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 2,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      }
+    },
+    "tras_recepcion": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 166,
+          "disponibleParaUso": 166,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 166
+        },
+        "BL-L": {
+          "aLaMano": 0,
+          "disponibleParaUso": -9,
+          "entrante": 0,
+          "saliente": 9,
+          "pronosticado": -9
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 1
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 20,
+          "disponibleParaUso": 20,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 20
+        },
+        "BL-L": {
+          "aLaMano": 9,
+          "disponibleParaUso": 9,
+          "entrante": 11,
+          "saliente": 0,
+          "pronosticado": 20
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 13,
+          "disponibleParaUso": 13,
+          "entrante": 3,
+          "saliente": 0,
+          "pronosticado": 16
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 2,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      }
+    },
+    "final": {
+      "cdPrincipal": {
+        "AZ-M": {
+          "aLaMano": 166,
+          "disponibleParaUso": 166,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 166
+        },
+        "BL-L": {
+          "aLaMano": 39,
+          "disponibleParaUso": 39,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 39
+        }
+      },
+      "cdSinStock": {
+        "AZ-M": {
+          "aLaMano": 3,
+          "disponibleParaUso": 3,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 3
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 1
+        }
+      },
+      "almacenCentro": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaCentro": {
+        "AZ-M": {
+          "aLaMano": 20,
+          "disponibleParaUso": 20,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 20
+        },
+        "BL-L": {
+          "aLaMano": 20,
+          "disponibleParaUso": 20,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 20
+        }
+      },
+      "almacenNorte": {
+        "AZ-M": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        },
+        "BL-L": {
+          "aLaMano": 6,
+          "disponibleParaUso": 6,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 6
+        }
+      },
+      "bodegaNorte": {
+        "AZ-M": {
+          "aLaMano": 13,
+          "disponibleParaUso": 13,
+          "entrante": 0,
+          "saliente": 0,
+          "pronosticado": 13
+        },
+        "BL-L": {
+          "aLaMano": 1,
+          "disponibleParaUso": 1,
+          "entrante": 2,
+          "saliente": 0,
+          "pronosticado": 3
+        }
+      }
+    }
+  }
+}

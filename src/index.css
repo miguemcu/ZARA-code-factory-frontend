@@ -22,7 +22,13 @@ html, body, #root {
   padding: 0;
 }
 
+/* Alto de la consola API (barra inferior fija) */
+:root {
+  --api-console-h: 30px;
+}
+
 body {
+  padding-bottom: var(--api-console-h);
   font-family: var(--font-sans);
   background: #FFFFFF;
   color: #111111;

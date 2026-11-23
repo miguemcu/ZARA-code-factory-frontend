@@ -1,0 +1,458 @@
+{
+  "pantalla": "Navegación por rol y lookups",
+  "descripcion": "Scopes reales de cada rol sembrado y qué lookups puede hacer cada uno.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "lookup_tiendas_403_vendedor",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "lookup_tiendas_403_planificador",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "lookup_cds_403_operador",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/centros-distribucion",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "lookup_cds_403_coordinador",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/centros-distribucion",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "lookup_variantes_403_vendedor",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/variantes",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "lookup_prioridad_cd_403_planificador",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas/abed0b85-7532-4edd-9f0b-abcb3b885bad/prioridad-cd",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "lookup_bodegas_403_encargado",
+      "rol": "ENCARGADO_BODEGA",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/bodegas-tienda",
+        "cuerpo": null
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "lookup_tiendas_200_admin",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas?size=5",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "nombre": "Tienda Demo Centro S3",
+            "ubicacion": "Medellín",
+            "estado": "ACTIVA",
+            "creadoEn": "2026-11-23T00:37:43.833734Z",
+            "actualizadoEn": "2026-11-23T00:37:43.833734Z"
+          },
+          {
+            "id": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "nombre": "Tienda Demo Norte S3",
+            "ubicacion": "Barranquilla",
+            "estado": "ACTIVA",
+            "creadoEn": "2026-11-23T00:37:43.950317Z",
+            "actualizadoEn": "2026-11-23T00:37:43.950317Z"
+          },
+          {
+            "id": "96408f30-5c6c-4ca7-bb7f-5694ea901807",
+            "nombre": "Tienda Demo Sur S3",
+            "ubicacion": "Cali",
+            "estado": "ACTIVA",
+            "creadoEn": "2026-11-23T00:37:47.089981Z",
+            "actualizadoEn": "2026-11-23T00:37:47.089981Z"
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 3,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 5,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 5,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 3,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "lookup_tienda_por_id_200_admin",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas/abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "nombre": "Tienda Demo Centro S3",
+        "ubicacion": "Medellín",
+        "estado": "ACTIVA",
+        "creadoEn": "2026-11-23T00:37:43.833734Z",
+        "actualizadoEn": "2026-11-23T00:37:43.833734Z",
+        "almacenId": "4b5508c1-910d-4360-99dc-bdf8cc3a8c7b",
+        "bodegaId": "0fe4ef24-652a-45ab-b569-67924f44214d"
+      }
+    },
+    {
+      "caso": "lookup_cd_por_id_200_admin",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/centros-distribucion/37918b02-357e-4a64-8f21-5a498541bfc7",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "nombre": "CD Demo Principal S3",
+        "ubicacion": "Bogotá",
+        "nodo": {
+          "id": "45cce843-da27-4a5e-8b73-2d2bac826b30",
+          "tipo": "CD",
+          "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+          "tiendaId": null
+        }
+      }
+    },
+    {
+      "caso": "lookup_variantes_sku_200_admin",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/variantes?sku=DEMO-S3",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "sku": "DEMO-S3-AZ-M",
+            "talla": "M",
+            "color": "AZ",
+            "templateId": "b602461c-04ad-414c-90e5-c6d22c5f5771",
+            "templateNombre": "Camisa Oxford demo S3",
+            "precioBase": 89900.0
+          },
+          {
+            "id": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "sku": "DEMO-S3-BL-L",
+            "talla": "L",
+            "color": "BL",
+            "templateId": "b602461c-04ad-414c-90e5-c6d22c5f5771",
+            "templateNombre": "Camisa Oxford demo S3",
+            "precioBase": 89900.0
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "lookup_prioridad_cd_200_admin",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas/abed0b85-7532-4edd-9f0b-abcb3b885bad/prioridad-cd",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": [
+        {
+          "id": "516ce5a7-6b0b-479b-b6fa-6cf0ab5edb87",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+          "ordenPrioridad": 1
+        },
+        {
+          "id": "46a140b9-177f-46cf-bb7c-675955df8aac",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+          "ordenPrioridad": 2
+        }
+      ]
+    },
+    {
+      "caso": "x_admin_tiendas_de_usuario",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/usuarios/76b6faf5-7844-41b9-8943-c05a65fdc3fa/tiendas",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": [
+        {
+          "id": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "nombre": "Tienda Demo Centro S3",
+          "activa": true
+        },
+        {
+          "id": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+          "nombre": "Tienda Demo Norte S3",
+          "activa": true
+        }
+      ]
+    },
+    {
+      "caso": "pag_page_fuera_de_rango",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas?page=999",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [],
+        "empty": true,
+        "first": false,
+        "last": true,
+        "number": 999,
+        "numberOfElements": 0,
+        "pageable": {
+          "offset": 19980,
+          "pageNumber": 999,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": true,
+          "sorted": false,
+          "unsorted": true
+        },
+        "totalElements": 3,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "pag_sort_invalido",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/tiendas?sort=noexiste,asc",
+        "cuerpo": null
+      },
+      "status": 500,
+      "nota": "BUG: un sort por un campo que no existe responde 500.",
+      "body": {
+        "timestamp": "2026-11-23T00:38:10.494Z",
+        "status": 500,
+        "error": "Internal Server Error",
+        "path": "/api/v1/tiendas"
+      }
+    },
+    {
+      "caso": "err_404_ruta_inexistente",
+      "rol": "ADMIN",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/no-existe",
+        "cuerpo": null
+      },
+      "status": 404,
+      "body": {
+        "timestamp": "2026-11-23T00:38:10.560Z",
+        "status": 404,
+        "error": "Not Found",
+        "path": "/api/v1/no-existe"
+      }
+    },
+    {
+      "caso": "err_405_metodo",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "DELETE",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": null
+      },
+      "status": 405,
+      "body": {
+        "timestamp": "2026-11-23T00:38:10.620Z",
+        "status": 405,
+        "error": "Method Not Allowed",
+        "path": "/api/v1/ventas"
+      }
+    }
+  ],
+  "scopesPorRol": {
+    "ADMIN": [
+      "catalogo:administrar",
+      "cd:administrar",
+      "despacho:operar",
+      "inventario-cd:administrar",
+      "inventario:administrar",
+      "inventario:consultar",
+      "recepcion:registrar",
+      "reposicion:administrar",
+      "reposicion:planificar",
+      "roles:administrar",
+      "scopes:administrar",
+      "tiendas:administrar",
+      "tiendas:operar-todas",
+      "transporte:operar",
+      "usuarios:administrar",
+      "ventas:anular",
+      "ventas:consultar",
+      "ventas:forzar-sin-stock",
+      "ventas:registrar"
+    ],
+    "COORDINADOR_TRANSPORTE": [
+      "inventario:consultar",
+      "transporte:operar"
+    ],
+    "ENCARGADO_BODEGA": [
+      "inventario:consultar",
+      "recepcion:registrar"
+    ],
+    "OPERADOR_CD": [
+      "despacho:operar",
+      "inventario-cd:administrar",
+      "inventario:consultar"
+    ],
+    "PLANIFICADOR_ABASTECIMIENTO": [
+      "inventario:consultar",
+      "reposicion:administrar",
+      "reposicion:planificar"
+    ],
+    "SUPERVISOR_TIENDA": [
+      "inventario:administrar",
+      "inventario:consultar",
+      "ventas:anular",
+      "ventas:consultar",
+      "ventas:forzar-sin-stock",
+      "ventas:registrar"
+    ],
+    "VENDEDOR": [
+      "inventario:consultar",
+      "ventas:consultar",
+      "ventas:forzar-sin-stock",
+      "ventas:registrar"
+    ]
+  },
+  "claimsDelAccessToken": {
+    "claims": [
+      "email",
+      "exp",
+      "iat",
+      "sub",
+      "typ"
+    ],
+    "ttlSegundos": 900,
+    "typ": "access"
+  }
+}
