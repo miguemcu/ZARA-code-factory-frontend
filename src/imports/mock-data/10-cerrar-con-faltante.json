@@ -1,0 +1,318 @@
+{
+  "pantalla": "Cerrar con faltante",
+  "descripcion": "Paso 8: cerrar una orden REABIERTA o despachar el pendiente.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "p8_cerrar_200_con_faltante",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/24ddd9f9-7b3c-483f-b071-78e4d38a8d7b/cerrar",
+        "cuerpo": {
+          "motivo": "Se acepta la pérdida de 3 unidades en tránsito"
+        }
+      },
+      "status": 200,
+      "body": {
+        "id": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+        "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+        "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 15,
+        "cantidadPendiente": 3,
+        "cantidadDespachadaAcumulada": 15,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-11-23T00:38:03.128285Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 15",
+            "timestamp": "2026-11-23T00:38:03.130923Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:03.135766Z"
+          }
+        ],
+        "motivoCierre": "Se acepta la pérdida de 3 unidades en tránsito",
+        "cerradaPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaCierre": "2026-11-23T00:38:08.766695267Z"
+      }
+    },
+    {
+      "caso": "p8_cerrar_400_motivo_vacio",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/24ddd9f9-7b3c-483f-b071-78e4d38a8d7b/cerrar",
+        "cuerpo": {
+          "motivo": " "
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "motivo: El motivo es obligatorio"
+      }
+    },
+    {
+      "caso": "p8_cerrar_409_orden_aprobada",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7/cerrar",
+        "cuerpo": {
+          "motivo": "prueba"
+        }
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "No se puede cerrar con faltante de la orden 2e3d0e2d-a1e8-4c24-869f-1c23d1c94ad7 en estado APROBADA"
+      }
+    },
+    {
+      "caso": "p8_cerrar_409_no_reabierta",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/32beaddb-f069-45a5-9796-68316692060f/cerrar",
+        "cuerpo": {
+          "motivo": "prueba"
+        }
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "No se puede cerrar con faltante de la orden 32beaddb-f069-45a5-9796-68316692060f en estado GENERADA"
+      }
+    },
+    {
+      "caso": "p8_cerrar_403_operador",
+      "rol": "OPERADOR_CD",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ordenes-reabastecimiento/24ddd9f9-7b3c-483f-b071-78e4d38a8d7b/cerrar",
+        "cuerpo": {
+          "motivo": "x"
+        }
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "p8_orden_cerrada_con_faltante",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "24ddd9f9-7b3c-483f-b071-78e4d38a8d7b",
+        "recomendacionId": "889be78d-b327-4847-8663-510b21e5e0eb",
+        "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 15,
+        "cantidadPendiente": 3,
+        "cantidadDespachadaAcumulada": 15,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-11-23T00:38:03.128285Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 15",
+            "timestamp": "2026-11-23T00:38:03.130923Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:03.135766Z"
+          }
+        ],
+        "motivoCierre": "Se acepta la pérdida de 3 unidades en tránsito",
+        "cerradaPor": "fe11482c-a5c4-4f77-ba7f-0f4435b32d80",
+        "fechaCierre": "2026-11-23T00:38:08.766695Z"
+      }
+    },
+    {
+      "caso": "p8_viaje_201_segundo_ciclo",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes",
+        "cuerpo": {
+          "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+          "vehiculo": "Camión DEMO-002",
+          "paradas": [
+            {
+              "cicloDespachoId": "8b1dc182-479d-4d36-994a-1022d7b31b8d"
+            }
+          ]
+        }
+      },
+      "status": 201,
+      "nota": "Camino alternativo: el pendiente de la orden B viaja en un segundo viaje.",
+      "body": {
+        "id": "b91640d3-dce9-431d-8811-e45ecf68dddb",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-002",
+        "estado": "ARMADO",
+        "fechaCreacion": "2026-11-23T00:38:08.875142037Z",
+        "fechaSalida": null,
+        "fechaCierre": null,
+        "paradas": [
+          {
+            "id": "c89de0f4-cdf2-4b8c-93a5-aaa786643d18",
+            "cicloDespachoId": "8b1dc182-479d-4d36-994a-1022d7b31b8d",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "PENDIENTE",
+            "fechaSalidaCd": null,
+            "fechaLlegada": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p8_salida_200_segundo_ciclo",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b91640d3-dce9-431d-8811-e45ecf68dddb/salida",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "b91640d3-dce9-431d-8811-e45ecf68dddb",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-002",
+        "estado": "EN_CURSO",
+        "fechaCreacion": "2026-11-23T00:38:08.875142Z",
+        "fechaSalida": "2026-11-23T00:38:08.905190648Z",
+        "fechaCierre": null,
+        "paradas": [
+          {
+            "id": "c89de0f4-cdf2-4b8c-93a5-aaa786643d18",
+            "cicloDespachoId": "8b1dc182-479d-4d36-994a-1022d7b31b8d",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "EN_TRANSITO",
+            "fechaSalidaCd": "2026-11-23T00:38:08.905190648Z",
+            "fechaLlegada": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p8_llegada_200_segundo_ciclo",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b91640d3-dce9-431d-8811-e45ecf68dddb/paradas/c89de0f4-cdf2-4b8c-93a5-aaa786643d18/llegada",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "b91640d3-dce9-431d-8811-e45ecf68dddb",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-002",
+        "estado": "CERRADO",
+        "fechaCreacion": "2026-11-23T00:38:08.875142Z",
+        "fechaSalida": "2026-11-23T00:38:08.905191Z",
+        "fechaCierre": "2026-11-23T00:38:09.933953599Z",
+        "paradas": [
+          {
+            "id": "c89de0f4-cdf2-4b8c-93a5-aaa786643d18",
+            "cicloDespachoId": "8b1dc182-479d-4d36-994a-1022d7b31b8d",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "ENTREGADO",
+            "fechaSalidaCd": "2026-11-23T00:38:08.905191Z",
+            "fechaLlegada": "2026-11-23T00:38:09.933953599Z"
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p8_recepcion_201_segundo_ciclo",
+      "rol": "ENCARGADO_BODEGA",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b91640d3-dce9-431d-8811-e45ecf68dddb/paradas/c89de0f4-cdf2-4b8c-93a5-aaa786643d18/recepcion",
+        "cuerpo": {
+          "cantidadRecibida": 11
+        }
+      },
+      "status": 201,
+      "body": {
+        "id": "40c965b2-095a-481b-9f7e-e4100a697e45",
+        "viajeParadaId": "c89de0f4-cdf2-4b8c-93a5-aaa786643d18",
+        "cicloDespachoId": "8b1dc182-479d-4d36-994a-1022d7b31b8d",
+        "cantidadDespachada": 11,
+        "cantidadRecibida": 11,
+        "discrepancia": 0,
+        "registradoPor": "d81c9130-5ae3-4354-a7a5-fa27daa96154",
+        "fechaRecepcion": "2026-11-23T00:38:09.957021248Z",
+        "estadoOrden": "CERRADA",
+        "cantidadPendienteOrden": 0
+      }
+    },
+    {
+      "caso": "p8_orden_cerrada_dos_ciclos",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ordenes-reabastecimiento/97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "97f1888b-e4e5-41f0-b8a4-14bc1515fa7a",
+        "recomendacionId": "1e7f480e-2c77-481e-acc0-d4137ac7cb46",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+        "cdAsignadoId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "motivoAsignacion": "Asignado al CD de prioridad 2",
+        "cantidadTotalSolicitada": 19,
+        "cantidadPendiente": 0,
+        "cantidadDespachadaAcumulada": 21,
+        "estado": "CERRADA",
+        "fechaCreacion": "2026-11-23T00:38:03.083952Z",
+        "intentos": [
+          {
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "ordenEvaluado": 1,
+            "resultado": "SIN_STOCK",
+            "motivo": "Disponible 3 menor que lo requerido 19",
+            "timestamp": "2026-11-23T00:38:03.087049Z"
+          },
+          {
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "ordenEvaluado": 2,
+            "resultado": "ASIGNADO",
+            "motivo": null,
+            "timestamp": "2026-11-23T00:38:03.090397Z"
+          }
+        ],
+        "motivoCierre": null,
+        "cerradaPor": null,
+        "fechaCierre": null
+      }
+    }
+  ]
+}

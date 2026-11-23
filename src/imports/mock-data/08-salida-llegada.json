@@ -1,0 +1,531 @@
+{
+  "pantalla": "Salida y llegada de paradas",
+  "descripcion": "Paso 6: registrar la salida del CD y la llegada a cada tienda.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "p6_salida_200",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/salida",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Sin cuerpo: toma la hora del servidor.",
+      "body": {
+        "id": "b0831076-081d-432d-b3bf-ffcefc50846a",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-001",
+        "estado": "EN_CURSO",
+        "fechaCreacion": "2026-11-23T00:38:05.051003Z",
+        "fechaSalida": "2026-11-23T00:38:05.456093071Z",
+        "fechaCierre": null,
+        "paradas": [
+          {
+            "id": "b1aba102-1ade-4950-87cc-c12af0fd8d34",
+            "cicloDespachoId": "3d6e13b3-fbd0-4729-a62e-56fd66f2757a",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "EN_TRANSITO",
+            "fechaSalidaCd": "2026-11-23T00:38:05.456093071Z",
+            "fechaLlegada": null
+          },
+          {
+            "id": "97138a0f-c243-464b-a5e0-ae787a99ae88",
+            "cicloDespachoId": "6804ac60-da24-4efd-9834-39a79c976760",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "ordenParada": 2,
+            "estado": "EN_TRANSITO",
+            "fechaSalidaCd": "2026-11-23T00:38:05.456093071Z",
+            "fechaLlegada": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p6_salida_400_futura",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/salida",
+        "cuerpo": {
+          "fechaSalida": "2026-11-23T01:38:05.256314Z"
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "La hora de salida no puede ser posterior a la actual"
+      }
+    },
+    {
+      "caso": "p6_salida_422_antes_del_despacho",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/salida",
+        "cuerpo": {
+          "fechaSalida": "2026-11-22T00:38:05.256314Z"
+        }
+      },
+      "status": 422,
+      "body": {
+        "mensaje": "La salida no puede ser anterior al despacho de sus ciclos (2026-11-23T00:38:04.471774Z)"
+      }
+    },
+    {
+      "caso": "p6_salida_400_fecha_mal_formada",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/salida",
+        "cuerpo": {
+          "fechaSalida": "22/11/2026 10:00"
+        }
+      },
+      "status": 400,
+      "nota": "La fecha debe ir en ISO-8601 con zona (2026-11-22T19:30:00-05:00 o ...Z).",
+      "body": {
+        "mensaje": "El cuerpo de la solicitud no es un JSON válido para esta operación"
+      }
+    },
+    {
+      "caso": "p6_salida_409_ya_salio",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/salida",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "El viaje b0831076-081d-432d-b3bf-ffcefc50846a está EN_CURSO, no ARMADO: ya salió"
+      }
+    },
+    {
+      "caso": "p6_llegada_200_primera_parada",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/paradas/b1aba102-1ade-4950-87cc-c12af0fd8d34/llegada",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "El viaje sigue EN_CURSO.",
+      "body": {
+        "id": "b0831076-081d-432d-b3bf-ffcefc50846a",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-001",
+        "estado": "EN_CURSO",
+        "fechaCreacion": "2026-11-23T00:38:05.051003Z",
+        "fechaSalida": "2026-11-23T00:38:05.456093Z",
+        "fechaCierre": null,
+        "paradas": [
+          {
+            "id": "b1aba102-1ade-4950-87cc-c12af0fd8d34",
+            "cicloDespachoId": "3d6e13b3-fbd0-4729-a62e-56fd66f2757a",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "ENTREGADO",
+            "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+            "fechaLlegada": "2026-11-23T00:38:06.668553137Z"
+          },
+          {
+            "id": "97138a0f-c243-464b-a5e0-ae787a99ae88",
+            "cicloDespachoId": "6804ac60-da24-4efd-9834-39a79c976760",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "ordenParada": 2,
+            "estado": "EN_TRANSITO",
+            "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+            "fechaLlegada": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p6_llegada_200_ultima_cierra_viaje",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/paradas/97138a0f-c243-464b-a5e0-ae787a99ae88/llegada",
+        "cuerpo": null
+      },
+      "status": 200,
+      "nota": "Última parada: el viaje pasa a CERRADO.",
+      "body": {
+        "id": "b0831076-081d-432d-b3bf-ffcefc50846a",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-001",
+        "estado": "CERRADO",
+        "fechaCreacion": "2026-11-23T00:38:05.051003Z",
+        "fechaSalida": "2026-11-23T00:38:05.456093Z",
+        "fechaCierre": "2026-11-23T00:38:06.710806316Z",
+        "paradas": [
+          {
+            "id": "b1aba102-1ade-4950-87cc-c12af0fd8d34",
+            "cicloDespachoId": "3d6e13b3-fbd0-4729-a62e-56fd66f2757a",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "ENTREGADO",
+            "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+            "fechaLlegada": "2026-11-23T00:38:06.668553Z"
+          },
+          {
+            "id": "97138a0f-c243-464b-a5e0-ae787a99ae88",
+            "cicloDespachoId": "6804ac60-da24-4efd-9834-39a79c976760",
+            "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+            "ordenParada": 2,
+            "estado": "ENTREGADO",
+            "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+            "fechaLlegada": "2026-11-23T00:38:06.710806316Z"
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p6_llegada_422_antes_de_salida",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/paradas/b1aba102-1ade-4950-87cc-c12af0fd8d34/llegada",
+        "cuerpo": {
+          "fechaLlegada": "2026-11-22T00:38:05.256314Z"
+        }
+      },
+      "status": 422,
+      "body": {
+        "mensaje": "La llegada no puede ser anterior a la salida del viaje (2026-11-23T00:38:05.456093Z)"
+      }
+    },
+    {
+      "caso": "p6_llegada_400_futura",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/paradas/b1aba102-1ade-4950-87cc-c12af0fd8d34/llegada",
+        "cuerpo": {
+          "fechaLlegada": "2026-11-23T01:38:05.599188Z"
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "La hora de llegada no puede ser posterior a la actual"
+      }
+    },
+    {
+      "caso": "p6_llegada_409_ya_entregada",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/paradas/b1aba102-1ade-4950-87cc-c12af0fd8d34/llegada",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "La parada b1aba102-1ade-4950-87cc-c12af0fd8d34 ya está ENTREGADO"
+      }
+    },
+    {
+      "caso": "p6_llegada_409_viaje_armado",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/6825d560-4539-4396-a87a-67182cf958f8/paradas/9ab1fe1e-acb9-40c3-89ac-1b53762bab9f/llegada",
+        "cuerpo": null
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "El viaje 6825d560-4539-4396-a87a-67182cf958f8 está ARMADO, no EN_CURSO"
+      }
+    },
+    {
+      "caso": "p6_llegada_404_parada_de_otro_viaje",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/b0831076-081d-432d-b3bf-ffcefc50846a/paradas/fb33fda4-b4e7-433f-a863-584fb48dc05c/llegada",
+        "cuerpo": null
+      },
+      "status": 404,
+      "body": {
+        "mensaje": "El viaje b0831076-081d-432d-b3bf-ffcefc50846a no tiene la parada fb33fda4-b4e7-433f-a863-584fb48dc05c"
+      }
+    },
+    {
+      "caso": "p6_salida_200_viaje_parcial",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/80efbbb3-2121-4688-a855-d7ec64eeac34/salida",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "80efbbb3-2121-4688-a855-d7ec64eeac34",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-002",
+        "estado": "EN_CURSO",
+        "fechaCreacion": "2026-11-23T00:38:05.115864Z",
+        "fechaSalida": "2026-11-23T00:38:06.747602423Z",
+        "fechaCierre": null,
+        "paradas": [
+          {
+            "id": "fb33fda4-b4e7-433f-a863-584fb48dc05c",
+            "cicloDespachoId": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "EN_TRANSITO",
+            "fechaSalidaCd": "2026-11-23T00:38:06.747602423Z",
+            "fechaLlegada": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p6_llegada_200_viaje_parcial",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/viajes/80efbbb3-2121-4688-a855-d7ec64eeac34/paradas/fb33fda4-b4e7-433f-a863-584fb48dc05c/llegada",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "id": "80efbbb3-2121-4688-a855-d7ec64eeac34",
+        "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+        "vehiculo": "Camión DEMO-002",
+        "estado": "CERRADO",
+        "fechaCreacion": "2026-11-23T00:38:05.115864Z",
+        "fechaSalida": "2026-11-23T00:38:06.747602Z",
+        "fechaCierre": "2026-11-23T00:38:07.790016089Z",
+        "paradas": [
+          {
+            "id": "fb33fda4-b4e7-433f-a863-584fb48dc05c",
+            "cicloDespachoId": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "ordenParada": 1,
+            "estado": "ENTREGADO",
+            "fechaSalidaCd": "2026-11-23T00:38:06.747602Z",
+            "fechaLlegada": "2026-11-23T00:38:07.790016089Z"
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p6_viajes_cerrados",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/viajes?estado=CERRADO",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "80efbbb3-2121-4688-a855-d7ec64eeac34",
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "vehiculo": "Camión DEMO-002",
+            "estado": "CERRADO",
+            "fechaCreacion": "2026-11-23T00:38:05.115864Z",
+            "fechaSalida": "2026-11-23T00:38:06.747602Z",
+            "fechaCierre": "2026-11-23T00:38:07.790016Z",
+            "paradas": [
+              {
+                "id": "fb33fda4-b4e7-433f-a863-584fb48dc05c",
+                "cicloDespachoId": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+                "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+                "ordenParada": 1,
+                "estado": "ENTREGADO",
+                "fechaSalidaCd": "2026-11-23T00:38:06.747602Z",
+                "fechaLlegada": "2026-11-23T00:38:07.790016Z"
+              }
+            ]
+          },
+          {
+            "id": "b0831076-081d-432d-b3bf-ffcefc50846a",
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "vehiculo": "Camión DEMO-001",
+            "estado": "CERRADO",
+            "fechaCreacion": "2026-11-23T00:38:05.051003Z",
+            "fechaSalida": "2026-11-23T00:38:05.456093Z",
+            "fechaCierre": "2026-11-23T00:38:06.710806Z",
+            "paradas": [
+              {
+                "id": "b1aba102-1ade-4950-87cc-c12af0fd8d34",
+                "cicloDespachoId": "3d6e13b3-fbd0-4729-a62e-56fd66f2757a",
+                "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+                "ordenParada": 1,
+                "estado": "ENTREGADO",
+                "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+                "fechaLlegada": "2026-11-23T00:38:06.668553Z"
+              },
+              {
+                "id": "97138a0f-c243-464b-a5e0-ae787a99ae88",
+                "cicloDespachoId": "6804ac60-da24-4efd-9834-39a79c976760",
+                "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+                "ordenParada": 2,
+                "estado": "ENTREGADO",
+                "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+                "fechaLlegada": "2026-11-23T00:38:06.710806Z"
+              }
+            ]
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 2,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": false,
+            "sorted": true,
+            "unsorted": false
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": false,
+          "sorted": true,
+          "unsorted": false
+        },
+        "totalElements": 2,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p8_viajes_listado_final",
+      "rol": "COORDINADOR_TRANSPORTE",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/viajes",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "id": "b91640d3-dce9-431d-8811-e45ecf68dddb",
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "vehiculo": "Camión DEMO-002",
+            "estado": "CERRADO",
+            "fechaCreacion": "2026-11-23T00:38:08.875142Z",
+            "fechaSalida": "2026-11-23T00:38:08.905191Z",
+            "fechaCierre": "2026-11-23T00:38:09.933954Z",
+            "paradas": [
+              {
+                "id": "c89de0f4-cdf2-4b8c-93a5-aaa786643d18",
+                "cicloDespachoId": "8b1dc182-479d-4d36-994a-1022d7b31b8d",
+                "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+                "ordenParada": 1,
+                "estado": "ENTREGADO",
+                "fechaSalidaCd": "2026-11-23T00:38:08.905191Z",
+                "fechaLlegada": "2026-11-23T00:38:09.933954Z"
+              }
+            ]
+          },
+          {
+            "id": "6825d560-4539-4396-a87a-67182cf958f8",
+            "cdId": "c41e9d7f-15f6-4193-8936-f8f4550f7a28",
+            "vehiculo": "Furgón DEMO-003",
+            "estado": "ARMADO",
+            "fechaCreacion": "2026-11-23T00:38:05.148055Z",
+            "fechaSalida": null,
+            "fechaCierre": null,
+            "paradas": [
+              {
+                "id": "9ab1fe1e-acb9-40c3-89ac-1b53762bab9f",
+                "cicloDespachoId": "36a64773-4df3-435c-ae0e-911e99107288",
+                "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+                "ordenParada": 1,
+                "estado": "PENDIENTE",
+                "fechaSalidaCd": null,
+                "fechaLlegada": null
+              }
+            ]
+          },
+          {
+            "id": "80efbbb3-2121-4688-a855-d7ec64eeac34",
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "vehiculo": "Camión DEMO-002",
+            "estado": "CERRADO",
+            "fechaCreacion": "2026-11-23T00:38:05.115864Z",
+            "fechaSalida": "2026-11-23T00:38:06.747602Z",
+            "fechaCierre": "2026-11-23T00:38:07.790016Z",
+            "paradas": [
+              {
+                "id": "fb33fda4-b4e7-433f-a863-584fb48dc05c",
+                "cicloDespachoId": "19a09432-2145-4fb5-870b-af57c11bf3bc",
+                "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+                "ordenParada": 1,
+                "estado": "ENTREGADO",
+                "fechaSalidaCd": "2026-11-23T00:38:06.747602Z",
+                "fechaLlegada": "2026-11-23T00:38:07.790016Z"
+              }
+            ]
+          },
+          {
+            "id": "b0831076-081d-432d-b3bf-ffcefc50846a",
+            "cdId": "37918b02-357e-4a64-8f21-5a498541bfc7",
+            "vehiculo": "Camión DEMO-001",
+            "estado": "CERRADO",
+            "fechaCreacion": "2026-11-23T00:38:05.051003Z",
+            "fechaSalida": "2026-11-23T00:38:05.456093Z",
+            "fechaCierre": "2026-11-23T00:38:06.710806Z",
+            "paradas": [
+              {
+                "id": "b1aba102-1ade-4950-87cc-c12af0fd8d34",
+                "cicloDespachoId": "3d6e13b3-fbd0-4729-a62e-56fd66f2757a",
+                "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+                "ordenParada": 1,
+                "estado": "ENTREGADO",
+                "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+                "fechaLlegada": "2026-11-23T00:38:06.668553Z"
+              },
+              {
+                "id": "97138a0f-c243-464b-a5e0-ae787a99ae88",
+                "cicloDespachoId": "6804ac60-da24-4efd-9834-39a79c976760",
+                "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+                "ordenParada": 2,
+                "estado": "ENTREGADO",
+                "fechaSalidaCd": "2026-11-23T00:38:05.456093Z",
+                "fechaLlegada": "2026-11-23T00:38:06.710806Z"
+              }
+            ]
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 4,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": false,
+            "sorted": true,
+            "unsorted": false
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": false,
+          "sorted": true,
+          "unsorted": false
+        },
+        "totalElements": 4,
+        "totalPages": 1
+      }
+    }
+  ]
+}

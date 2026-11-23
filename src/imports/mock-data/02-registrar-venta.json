@@ -1,0 +1,455 @@
+{
+  "pantalla": "Registrar venta",
+  "descripcion": "Paso 1 del guion: la venta en la tienda Centro dispara el traspaso y la recomendación.",
+  "origen": "Capturado del stack local (develop 0b62743) sembrado con tools/demo/sembrar_demo.py, 22-nov-2026 (hora del servidor en UTC: 23-nov 00:37-00:38). Ver README.md de esta carpeta.",
+  "llamadas": [
+    {
+      "caso": "p1_venta_201",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "3cf2cf81-c828-4799-a0af-01e46c65fd82",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 201,
+      "body": {
+        "transaccionId": "3cf2cf81-c828-4799-a0af-01e46c65fd82",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "vendedorId": "76b6faf5-7844-41b9-8943-c05a65fdc3fa",
+        "fecha": "2026-11-23T00:38:01.666182778Z",
+        "total": 89900,
+        "lineas": [
+          {
+            "id": "ff5c428d-50dd-4a4d-801e-5ce666078f71",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cantidad": 1,
+            "precioUnitario": 89900,
+            "canal": "FISICO",
+            "forzada": false,
+            "estado": "REGISTRADA",
+            "anuladaPor": null,
+            "anuladaEn": null,
+            "motivoAnulacion": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p1_venta_200_reintento",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "3cf2cf81-c828-4799-a0af-01e46c65fd82",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "nota": "Mismo cuerpo y mismo transaccionId: 200 con la venta original, sin descontar otra vez.",
+      "body": {
+        "transaccionId": "3cf2cf81-c828-4799-a0af-01e46c65fd82",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "vendedorId": "76b6faf5-7844-41b9-8943-c05a65fdc3fa",
+        "fecha": "2026-11-23T00:38:01.666183Z",
+        "total": 89900.0,
+        "lineas": [
+          {
+            "id": "ff5c428d-50dd-4a4d-801e-5ce666078f71",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cantidad": 1,
+            "precioUnitario": 89900.0,
+            "canal": "FISICO",
+            "forzada": false,
+            "estado": "REGISTRADA",
+            "anuladaPor": null,
+            "anuladaEn": null,
+            "motivoAnulacion": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p1_venta_409_transaccion_otro_contenido",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "3cf2cf81-c828-4799-a0af-01e46c65fd82",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 2,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "La transacción 3cf2cf81-c828-4799-a0af-01e46c65fd82 ya se usó con datos diferentes"
+      }
+    },
+    {
+      "caso": "p1_venta_409_sin_stock",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "7de82514-0519-4824-965f-d782df002dae",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 999,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 409,
+      "body": {
+        "mensaje": "Stock insuficiente para el SKU DEMO-S3-AZ-M"
+      }
+    },
+    {
+      "caso": "p1_venta_400_items_vacios",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "ded673ca-e3f9-4f08-8c24-ba2bea61af7f",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": []
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "items: must not be empty"
+      }
+    },
+    {
+      "caso": "p1_venta_400_cantidad_cero",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "ac91100f-e9a5-45fb-a023-ea88957e648c",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 0,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "items[0].cantidad: must be greater than 0"
+      }
+    },
+    {
+      "caso": "p1_venta_404_sku_inexistente",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "166c783b-dd4a-4a71-8900-fac872ba43dc",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "NO-EXISTE-XX",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 404,
+      "body": {
+        "mensaje": "No existe una variante con SKU NO-EXISTE-XX"
+      }
+    },
+    {
+      "caso": "p1_venta_tienda_fuera_de_alcance",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "4a8fefd5-db16-4e37-9f33-2c1c1ef0fc8b",
+          "tiendaId": "96408f30-5c6c-4ca7-bb7f-5694ea901807",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 403,
+      "nota": "Tienda no asignada al vendedor: aquí la API responde 403, no 404.",
+      "body": {
+        "mensaje": "No tiene acceso a esta tienda"
+      }
+    },
+    {
+      "caso": "p1_venta_403_planificador",
+      "rol": "PLANIFICADOR_ABASTECIMIENTO",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "f1ae530e-ca22-4ea5-bbe5-e5a152afcaa7",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 403,
+      "body": {
+        "mensaje": "No tiene permisos para realizar esta acción"
+      }
+    },
+    {
+      "caso": "err_400_json_mal_formado",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": null
+      },
+      "status": 400,
+      "body": {
+        "mensaje": "El cuerpo de la solicitud no es un JSON válido para esta operación"
+      }
+    },
+    {
+      "caso": "p1_ventas_listado",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "GET",
+        "ruta": "/api/v1/ventas?tiendaId=abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "cuerpo": null
+      },
+      "status": 200,
+      "body": {
+        "content": [
+          {
+            "transaccionId": "3cf2cf81-c828-4799-a0af-01e46c65fd82",
+            "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+            "vendedorId": "76b6faf5-7844-41b9-8943-c05a65fdc3fa",
+            "fecha": "2026-11-23T00:38:01.666183Z",
+            "total": 89900.0,
+            "lineas": [
+              {
+                "id": "ff5c428d-50dd-4a4d-801e-5ce666078f71",
+                "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+                "cantidad": 1,
+                "precioUnitario": 89900.0,
+                "canal": "FISICO",
+                "forzada": false,
+                "estado": "REGISTRADA",
+                "anuladaPor": null,
+                "anuladaEn": null,
+                "motivoAnulacion": null
+              }
+            ]
+          }
+        ],
+        "empty": false,
+        "first": true,
+        "last": true,
+        "number": 0,
+        "numberOfElements": 1,
+        "pageable": {
+          "offset": 0,
+          "pageNumber": 0,
+          "pageSize": 20,
+          "paged": true,
+          "sort": {
+            "empty": false,
+            "sorted": true,
+            "unsorted": false
+          },
+          "unpaged": false
+        },
+        "size": 20,
+        "sort": {
+          "empty": false,
+          "sorted": true,
+          "unsorted": false
+        },
+        "totalElements": 1,
+        "totalPages": 1
+      }
+    },
+    {
+      "caso": "p1_venta_201_centro_bl",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "26f6e1c1-91bf-4823-9938-008b905090e6",
+          "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-BL-L",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 201,
+      "nota": "Ventas adicionales del recorrido (para tener una recomendación por tienda y variante).",
+      "body": {
+        "transaccionId": "26f6e1c1-91bf-4823-9938-008b905090e6",
+        "tiendaId": "abed0b85-7532-4edd-9f0b-abcb3b885bad",
+        "vendedorId": "76b6faf5-7844-41b9-8943-c05a65fdc3fa",
+        "fecha": "2026-11-23T00:38:02.489475519Z",
+        "total": 89900,
+        "lineas": [
+          {
+            "id": "fde7a5f0-8886-4815-93eb-ff11633c7c06",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cantidad": 1,
+            "precioUnitario": 89900,
+            "canal": "FISICO",
+            "forzada": false,
+            "estado": "REGISTRADA",
+            "anuladaPor": null,
+            "anuladaEn": null,
+            "motivoAnulacion": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p1_venta_201_norte_az",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "7c45c1f5-89d3-4332-8d4a-2ca0a1cb2433",
+          "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-AZ-M",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 201,
+      "body": {
+        "transaccionId": "7c45c1f5-89d3-4332-8d4a-2ca0a1cb2433",
+        "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "vendedorId": "76b6faf5-7844-41b9-8943-c05a65fdc3fa",
+        "fecha": "2026-11-23T00:38:02.569371054Z",
+        "total": 89900,
+        "lineas": [
+          {
+            "id": "f9365031-9f28-4824-ad61-ca1a31c7aaca",
+            "varianteId": "ce457d78-460f-4997-b22e-a491f579fe36",
+            "cantidad": 1,
+            "precioUnitario": 89900,
+            "canal": "FISICO",
+            "forzada": false,
+            "estado": "REGISTRADA",
+            "anuladaPor": null,
+            "anuladaEn": null,
+            "motivoAnulacion": null
+          }
+        ]
+      }
+    },
+    {
+      "caso": "p1_venta_201_norte_bl",
+      "rol": "VENDEDOR",
+      "request": {
+        "metodo": "POST",
+        "ruta": "/api/v1/ventas",
+        "cuerpo": {
+          "transaccionId": "3afaf100-47cd-43a5-8baf-e191bcb5215b",
+          "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+          "forzarSinStock": false,
+          "items": [
+            {
+              "sku": "DEMO-S3-BL-L",
+              "cantidad": 1,
+              "precioUnitario": 89900
+            }
+          ]
+        }
+      },
+      "status": 201,
+      "body": {
+        "transaccionId": "3afaf100-47cd-43a5-8baf-e191bcb5215b",
+        "tiendaId": "8a7a1acc-4158-40ca-8a5c-9bcb628cc2ef",
+        "vendedorId": "76b6faf5-7844-41b9-8943-c05a65fdc3fa",
+        "fecha": "2026-11-23T00:38:02.646605239Z",
+        "total": 89900,
+        "lineas": [
+          {
+            "id": "ac5eb23c-c93a-4cdb-815f-c0ce0bca1108",
+            "varianteId": "e8a1af1e-d171-417f-97c7-fe6a3e4d7253",
+            "cantidad": 1,
+            "precioUnitario": 89900,
+            "canal": "FISICO",
+            "forzada": false,
+            "estado": "REGISTRADA",
+            "anuladaPor": null,
+            "anuladaEn": null,
+            "motivoAnulacion": null
+          }
+        ]
+      }
+    }
+  ]
+}
