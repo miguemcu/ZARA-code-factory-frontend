@@ -2,6 +2,37 @@
 
 React + Vite + Tailwind CSS project running inside Figma Make.
 
+## Qué es este proyecto
+
+RETAIL OS es el frontend de la API de cadena de suministro (curso Arquitectura de Software, UdeA). **La API es el desarrollo principal**: la interfaz es minimalista y deja ver las llamadas (línea `MÉTODO {baseUrl}/ruta` bajo cada botón, consola API abajo con request/response, código HTTP en cada aviso).
+
+- **Sprint 2 (ya existe):** login y MFA, administración (usuarios, roles, catálogo, red logística), inventario, ventas y reposición interna (`App.tsx`, `Operations.tsx`).
+- **Sprint 3 (demo del ciclo de abastecimiento):** venta → recomendación → orden con fallback de CD → despacho → viaje → salida/llegada → recepción con faltante → cierre. El contrato, el brief de pantallas, el guion y respuestas reales están en `src/imports/` (`frontend-contrato.md`, `frontend-brief-figma.md`, `guion-review-sprint3.md`, `mock-data/*.json`). Leerlos antes de tocar el ciclo.
+
+Reglas que no se negocian:
+
+- **No rediseñar lo existente.** Mismos tokens y primitivos: Instrument Sans / DM Mono, ink/muted/faint/rule/surface, bordes de 1px, sin radios ni sombras, textos en español.
+- **Nombres, no UUID.** Mostrar "Tienda Demo Centro", "CD Demo Principal", "DEMO-S3-AZ-M · Camisa Oxford · Azul · M"; "—" si no se conoce. El id completo solo en la consola o al pasar el cursor.
+- **Estados:** nombre amigable + valor real en mono gris ("● Por revisar  BORRADOR"); color solo como punto o badge pequeño.
+- **Nunca registrar** tokens, contraseñas, códigos MFA ni la cookie (la consola recibe los cuerpos ya redactados desde `api.ts`).
+- La API no dice qué rol tiene el usuario (no hay `/me`): el **menú sale del rol elegido** en el selector de la demo.
+
+Archivos del Sprint 3:
+
+- `src/ui.tsx` — primitivos compartidos (Btn, Badge, Banner con 422 y código HTTP, Modal, Table, Field, Shell, CallLine, StatusTag, estados vacío/cargando). Las vistas nuevas importan de aquí; `App.tsx` y `Operations.tsx` todavía tienen sus copias (migrarlas es trabajo pendiente, sin cambiar el aspecto).
+- `src/demo.ts` — roles de demo (correo, scopes), directorio id → nombre (datos sembrados + lo aprendido de las respuestas, en localStorage) y tipos del ciclo.
+- `src/mock.ts` — modo simulado: con `mock://demo` en el ApiBar, `http.*` responde desde `mock-data` con la misma forma, códigos y mensajes, y simula el ciclo para poder recorrer la demo en orden.
+- `src/ApiConsole.tsx`, `src/RoleSelect.tsx`, `src/Abastecimiento.tsx` — consola API, selector de rol y vistas del ciclo.
+
+## Ramas
+
+- `main` — lo desplegado (Vercel). Solo recibe merges desde `develop` por PR.
+- `develop` — integración. Las ramas de trabajo salen de aquí y vuelven por PR.
+- `feat/<tema>`, `fix/<tema>`, `chore/<tema>`, `docs/<tema>` — una rama por entrega (p. ej. `feat/vistas-sprint-2`, `feat/demo-sprint-3`). Nunca se trabaja ni se hace commit directo en `main` o `develop`.
+- Commits pequeños con Conventional Commits en español: `tipo(ámbito): descripción` (`feat(abastecimiento): …`, `fix(api): …`, `docs(agents): …`).
+
+Antes de hacer commit: `npx tsc --noEmit -p .` y `VITE_API_URL=http://localhost:8080/api/v1 npx vite build` deben pasar.
+
 ## Development Server
 
 A Vite development server is **already running** on `$PORT` (default 8443). You don't need to start it manually.
