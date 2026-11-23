@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  apiConfig, http,
+  apiConfig, http, isMockUrl, MOCK_URL,
   type LoginResponse, type UsuarioResponse, type RolResponse, type ScopeResponse,
   type CategoriaResponse, type TemplateResponse, type VarianteResponse,
   type TiendaResponse, type CentroDistribucionResponse, type CentroDistribucionConNodoResponse,
@@ -14,18 +14,27 @@ import {
   variantesCache, type Catalogs,
 } from './catalogCache'
 import { VarianteSelector } from './VarianteSelector'
+import { Banner, type AppBanner, type HttpStatus } from './ui'
+import { ApiConsole } from './ApiConsole'
+import { RoleSelectView } from './RoleSelect'
+import { roleByEmail, roleById, storeRole, storedRole, type DemoRole, type RoleId } from './demo'
+import {
+  CiclosView, DespachoView, HistorialVentasView, InventarioView, OrdenesView, ParadasView, RecomendacionesView, RegistrarVentaView, ViajesView,
+} from './Abastecimiento'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
-type AuthState = 'login' | 'mfa' | 'app'
+type AuthState = 'rol' | 'login' | 'mfa' | 'app'
 type View = 'perfil' | 'usuarios' | 'roles' | 'scopes' | 'categorias' | 'templates' | 'variantes' | 'tiendas' | 'centros' | 'bodegas' | 'inventario' | 'ventas' | 'reposicion'
-type HttpStatus = 400 | 401 | 403 | 404 | 409 | 500 | 0
+  // Sprint 3: ciclo de abastecimiento
+  | 'venta' | 'historial' | 'inv-tienda' | 'inv-bodega' | 'inv-cd' | 'inv-todo' | 'ajustes'
+  | 'recomendaciones' | 'ordenes' | 'despacho' | 'ciclos' | 'viajes' | 'paradas'
 
-interface AppBanner { status: HttpStatus; mensaje: string }
+type NavGroup = { title: string; items: { id: View; label: string }[] }
 
 // ─── Nav ────────────────────────────────────────────────────────────────────
 
-const NAV: { title: string; items: { id: View; label: string }[] }[] = [
+const NAV: NavGroup[] = [
   { title: 'Autenticación', items: [{ id: 'perfil', label: 'Perfil / MFA' }] },
   {
     title: 'Usuarios & Permisos',
@@ -55,6 +64,34 @@ const NAV: { title: string; items: { id: View; label: string }[] }[] = [
   { title: 'Punto de venta', items: [{ id: 'ventas', label: 'Ventas y Demanda' }] },
   { title: 'Reposición interna', items: [{ id: 'reposicion', label: 'Reposición y Traspasos' }] },
 ]
+
+// Menú de cada rol (brief, "Menú de cada rol"). La API no dice qué rol tiene la persona: lo decide el selector.
+const CUENTA: NavGroup = { title: 'Cuenta', items: [{ id: 'perfil', label: 'Perfil / MFA' }] }
+const PUNTO_DE_VENTA: NavGroup = { title: 'Punto de venta', items: [{ id: 'venta', label: 'Registrar venta' }, { id: 'historial', label: 'Historial de ventas' }] }
+
+const NAV_BY_ROLE: Record<RoleId, NavGroup[]> = {
+  VENDEDOR: [PUNTO_DE_VENTA, { title: 'Inventario', items: [{ id: 'inv-tienda', label: 'Inventario de mi tienda' }] }, CUENTA],
+  SUPERVISOR_TIENDA: [PUNTO_DE_VENTA, { title: 'Inventario', items: [{ id: 'inv-tienda', label: 'Inventario de mi tienda' }, { id: 'ajustes', label: 'Ajustes de inventario' }] }, CUENTA],
+  PLANIFICADOR_ABASTECIMIENTO: [{ title: 'Abastecimiento', items: [{ id: 'recomendaciones', label: 'Recomendaciones' }, { id: 'ordenes', label: 'Órdenes' }] }, { title: 'Inventario', items: [{ id: 'inv-todo', label: 'Inventario' }] }, CUENTA],
+  OPERADOR_CD: [{ title: 'Centro de distribución', items: [{ id: 'despacho', label: 'Despacho' }, { id: 'inv-cd', label: 'Inventario del CD' }] }, CUENTA],
+  COORDINADOR_TRANSPORTE: [{ title: 'Transporte', items: [{ id: 'ciclos', label: 'Ciclos por despachar en viaje' }, { id: 'viajes', label: 'Viajes' }] }, CUENTA],
+  ENCARGADO_BODEGA: [{ title: 'Bodega', items: [{ id: 'paradas', label: 'Paradas por recibir' }, { id: 'inv-bodega', label: 'Inventario de mi bodega' }] }, CUENTA],
+  ADMIN: [
+    ...NAV,
+    {
+      title: 'Ciclo de abastecimiento',
+      items: [
+        { id: 'venta', label: 'Registrar venta' }, { id: 'historial', label: 'Historial de ventas' },
+        { id: 'inv-todo', label: 'Inventario por ubicación' }, { id: 'ajustes', label: 'Ajustes de inventario' },
+        { id: 'recomendaciones', label: 'Recomendaciones' }, { id: 'ordenes', label: 'Órdenes' }, { id: 'despacho', label: 'Despacho' },
+        { id: 'ciclos', label: 'Ciclos por despachar en viaje' }, { id: 'viajes', label: 'Viajes' }, { id: 'paradas', label: 'Paradas por recibir' },
+      ],
+    },
+  ],
+}
+
+const navFor = (role: RoleId | null) => NAV_BY_ROLE[role ?? 'ADMIN']
+const firstView = (role: RoleId | null): View => role === 'ADMIN' || !role ? 'usuarios' : navFor(role)[0].items[0].id
 
 // ─── Design tokens (inline — no external theme file needed) ─────────────────
 
@@ -178,29 +215,7 @@ function Badge({ value, variant = 'neutral' }: { value: string; variant?: 'neutr
   )
 }
 
-// ─── Global error/info banner ───────────────────────────────────────────────
-
-function Banner({ banner, onClose }: { banner: AppBanner; onClose: () => void }) {
-  const cfg: Record<number, { label: string; side: string }> = {
-    400: { label: 'Revisa los datos', side: T.danger },
-    401: { label: 'Sesión no autorizada', side: '#D97706' },
-    403: { label: 'Acceso denegado', side: T.danger },
-    404: { label: 'No encontrado', side: T.muted },
-    409: { label: 'Conflicto', side: '#7C3AED' },
-    500: { label: 'Error del servidor', side: T.danger },
-    0:   { label: 'Error de Conexión', side: T.muted },
-  }
-  const c = cfg[banner.status] ?? cfg[0]
-  return (
-    <div style={{ borderLeft: `3px solid ${c.side}`, background: T.surface, padding: '11px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: c.side, whiteSpace: 'nowrap', paddingTop: 1 }}>{c.label}</span>
-        <span style={{ fontSize: 13, color: T.ink }}>{banner.status === 403 ? 'Acceso denegado: falta el permiso requerido' : banner.mensaje}</span>
-      </div>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.faint, fontSize: 18, lineHeight: 1, padding: 0, flexShrink: 0 }}>×</button>
-    </div>
-  )
-}
+// ─── Global error/info banner: compartido en ui.tsx (incluye 422 y el código HTTP) ──
 
 // ─── Table primitives ───────────────────────────────────────────────────────
 
@@ -327,7 +342,7 @@ function fmtDate(iso: string) {
 
 // ─── API URL Settings Bar ───────────────────────────────────────────────────
 
-function ApiBar({ baseUrl, onChangeUrl }: { baseUrl: string; onChangeUrl: (url: string) => void }) {
+function ApiBar({ baseUrl, onChangeUrl, role, onChangeRole }: { baseUrl: string; onChangeUrl: (url: string) => void; role?: DemoRole | null; onChangeRole?: () => void }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(baseUrl)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -363,8 +378,17 @@ function ApiBar({ baseUrl, onChangeUrl }: { baseUrl: string; onChangeUrl: (url: 
           >
             {baseUrl}
           </span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: T.faint }}>(clic para editar)</span>
+          {isMockUrl(baseUrl)
+            ? <span title="Las respuestas salen de src/imports/mock-data" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', color: '#7C3AED' }}>● MODO SIMULADO</span>
+            : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: T.faint }}>(clic para editar · {MOCK_URL} = modo simulado)</span>}
         </>
+      )}
+      {role && (
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', color: T.faint, textTransform: 'uppercase' }}>Rol activo:</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: T.ink }} title={role.id}>{role.nombre}</span>
+          {onChangeRole && <button onClick={onChangeRole} style={{ fontFamily: 'var(--font-sans)', fontSize: 11, border: `1px solid ${T.rule}`, background: T.canvas, color: T.ink, padding: '3px 10px', cursor: 'pointer' }}>Cambiar de rol</button>}
+        </div>
       )}
     </div>
   )
@@ -374,13 +398,15 @@ function ApiBar({ baseUrl, onChangeUrl }: { baseUrl: string; onChangeUrl: (url: 
 // AUTH VIEWS
 // ════════════════════════════════════════════════════════════════════════════
 
-function LoginView({ onLogin, onMfa, baseUrl, onChangeUrl }: {
+function LoginView({ onLogin, onMfa, baseUrl, onChangeUrl, role, onChangeRole }: {
   onLogin: (user: UsuarioResponse, token: string) => void
   onMfa: (challengeToken: string) => void
   baseUrl: string
   onChangeUrl: (url: string) => void
+  role?: DemoRole | null
+  onChangeRole?: () => void
 }) {
-  const [email, setEmail] = useState('admin@supplychain.local')
+  const [email, setEmail] = useState(role?.email ?? 'admin@supplychain.local')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -404,12 +430,13 @@ function LoginView({ onLogin, onMfa, baseUrl, onChangeUrl }: {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: T.canvas }}>
-      <ApiBar baseUrl={baseUrl} onChangeUrl={onChangeUrl} />
+      <ApiBar baseUrl={baseUrl} onChangeUrl={onChangeUrl} role={role} onChangeRole={onChangeRole} />
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: 360, padding: '0 24px' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <Mono size={10}><span style={{ letterSpacing: '0.2em' }}>SISTEMA DE GESTIÓN</span></Mono>
             <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: T.ink, marginTop: 10 }}>RETAIL OS</div>
+            {role && <div style={{ fontSize: 13, color: T.muted, marginTop: 10 }}>Entrando como <strong style={{ color: T.ink, fontWeight: 600 }}>{role.nombre}</strong></div>}
           </div>
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {error && <div style={{ fontSize: 13, color: T.danger, borderLeft: `2px solid ${T.danger}`, paddingLeft: 10 }}>{error}</div>}
@@ -419,7 +446,7 @@ function LoginView({ onLogin, onMfa, baseUrl, onChangeUrl }: {
             </div>
             <div>
               <Label required>Contraseña</Label>
-              <Input value={password} onChange={setPassword} type="password" placeholder="••••••••" />
+              <Input value={password} onChange={setPassword} type="password" placeholder="••••••••" autoFocus={!!role} />
             </div>
             <button
               type="submit" disabled={loading}
@@ -1716,18 +1743,18 @@ function BodegasView() {
 // SIDEBAR
 // ════════════════════════════════════════════════════════════════════════════
 
-function Sidebar({ current, onNav, onLogout, user }: {
-  current: View; onNav: (v: View) => void; onLogout: () => void; user: UsuarioResponse
+function Sidebar({ current, onNav, onLogout, user, nav, roleName }: {
+  current: View; onNav: (v: View) => void; onLogout: () => void; user: UsuarioResponse; nav: NavGroup[]; roleName?: string
 }) {
   return (
-    <aside style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${T.rule}`, display: 'flex', flexDirection: 'column', background: T.canvas, height: '100vh', position: 'sticky', top: 0 }}>
+    <aside style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${T.rule}`, display: 'flex', flexDirection: 'column', background: T.canvas, height: 'calc(100vh - var(--api-console-h))', position: 'sticky', top: 0 }}>
       <div style={{ padding: '22px 20px 18px', borderBottom: `1px solid ${T.rule}` }}>
         <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: T.ink }}>RETAIL OS</div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', color: T.faint, marginTop: 2 }}>v2.4.1 · API v1</div>
       </div>
 
       <nav style={{ flex: 1, overflowY: 'auto', padding: '14px 0' }}>
-        {NAV.map(group => (
+        {nav.map(group => (
           <div key={group.title} style={{ marginBottom: 4 }}>
             <div style={{ padding: '5px 20px', fontSize: 10, letterSpacing: '0.1em', color: T.faint, fontWeight: 600, textTransform: 'uppercase' }}>
               {group.title}
@@ -1753,7 +1780,7 @@ function Sidebar({ current, onNav, onLogout, user }: {
 
       <div style={{ borderTop: `1px solid ${T.rule}`, padding: 16 }}>
         <div style={{ fontSize: 12, color: T.muted, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={user.email}>{user.email}</div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: T.faint, marginBottom: 12 }}>{user.estado}</div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: T.faint, marginBottom: 12 }}>{roleName ? `${roleName} · ` : ''}{user.estado}</div>
         <button
           onClick={onLogout}
           style={{ background: 'none', border: `1px solid ${T.rule}`, padding: '6px 12px', fontSize: 12, fontFamily: 'var(--font-sans)', color: T.muted, cursor: 'pointer', fontWeight: 500, width: '100%', transition: 'all .15s' }}
@@ -1772,34 +1799,43 @@ function Sidebar({ current, onNav, onLogout, user }: {
 // ════════════════════════════════════════════════════════════════════════════
 
 export default function App() {
-  const [authState, setAuthState] = useState<AuthState>('login')
+  const [role, setRole] = useState<RoleId | null>(() => storedRole())
+  const [authState, setAuthState] = useState<AuthState>(() => storedRole() ? 'login' : 'rol')
   const [challengeToken, setChallengeToken] = useState('')
   const [user, setUser] = useState<UsuarioResponse | null>(null)
-  const [view, setView] = useState<View>('usuarios')
+  const [view, setView] = useState<View>(() => firstView(storedRole()))
+  const [params, setParams] = useState<Record<string, string> | undefined>()
   const [baseUrl, setBaseUrl] = useState(() => apiConfig.getBaseUrl())
+  const demoRole = roleById(role)
 
   const handleChangeUrl = useCallback((url: string) => {
     apiConfig.setBaseUrl(url)
     setBaseUrl(apiConfig.getBaseUrl())
   }, [])
 
-  const handleLogin = useCallback((u: UsuarioResponse) => {
-    setUser(u); setAuthState('app')
+  const pickRole = useCallback((r: DemoRole) => {
+    storeRole(r.id); setRole(r.id); setView(firstView(r.id)); setParams(undefined); setAuthState('login')
   }, [])
+
+  // Si se entra con el correo de otro usuario de demo, el menú sigue al usuario real
+  const enter = useCallback((u: UsuarioResponse) => {
+    const byEmail = roleByEmail(u.email)
+    if (byEmail && byEmail.id !== role) { storeRole(byEmail.id); setRole(byEmail.id); setView(firstView(byEmail.id)) }
+    setUser(u); setAuthState('app')
+  }, [role])
 
   const handleMfa = useCallback((token: string) => {
     setChallengeToken(token); setAuthState('mfa')
   }, [])
 
-  const handleMfaSuccess = useCallback((u: UsuarioResponse) => {
-    setUser(u); setAuthState('app')
-  }, [])
-
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(async (next: AuthState = 'login') => {
     await http.postPublic('/auth/logout')
     apiConfig.setToken(null); resetCaches()
-    setUser(null); setAuthState('login'); setView('usuarios')
+    setUser(null); setParams(undefined); setAuthState(next)
+    if (next === 'rol') { storeRole(null); setRole(null) }
   }, [])
+
+  const navigate = useCallback((key: string, next?: Record<string, string>) => { setView(key as View); setParams(next) }, [])
 
   // Register 401 handler
   useEffect(() => {
@@ -1808,14 +1844,43 @@ export default function App() {
     })
   }, [])
 
-  if (authState === 'login')
-    return <LoginView onLogin={handleLogin} onMfa={handleMfa} baseUrl={baseUrl} onChangeUrl={handleChangeUrl} />
+  const screen = (() => {
+    if (authState === 'rol') return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: T.canvas }}>
+        <ApiBar baseUrl={baseUrl} onChangeUrl={handleChangeUrl} />
+        <RoleSelectView onPick={pickRole} />
+      </div>
+    )
+    if (authState === 'login')
+      return <LoginView key={role ?? 'sin-rol'} onLogin={enter} onMfa={handleMfa} baseUrl={baseUrl} onChangeUrl={handleChangeUrl} role={demoRole} onChangeRole={() => setAuthState('rol')} />
+    if (authState === 'mfa')
+      return <MfaView challengeToken={challengeToken} onSuccess={enter} onBack={() => setAuthState('login')} baseUrl={baseUrl} />
+    return null
+  })()
+  if (screen) return <>{screen}<ApiConsole /></>
 
-  if (authState === 'mfa')
-    return <MfaView challengeToken={challengeToken} onSuccess={handleMfaSuccess} onBack={() => setAuthState('login')} baseUrl={baseUrl} />
+  const nav = navFor(role)
+  const allowed = nav.some(g => g.items.some(i => i.id === view))
+  const current: View = allowed ? view : nav[0].items[0].id
 
   const renderView = () => {
-    switch (view) {
+    const props = { role: role ?? 'ADMIN' as RoleId, nav: navigate, params }
+    switch (current) {
+      case 'venta':           return <RegistrarVentaView {...props} />
+      case 'historial':       return <HistorialVentasView {...props} />
+      case 'inv-tienda':      return <InventarioView {...props} alcance="tienda" titulo="Inventario de mi tienda" />
+      case 'inv-bodega':      return <InventarioView {...props} alcance="bodega" titulo="Inventario de mi bodega" />
+      case 'inv-cd':          return <InventarioView {...props} alcance="cd" titulo="Inventario del CD" />
+      case 'inv-todo':        return <InventarioView {...props} alcance="todo" />
+      case 'ajustes':         return <InventarioView {...props} alcance={role === 'OPERADOR_CD' ? 'cd' : 'todo'} inicial="ajuste" titulo="Ajustes de inventario" />
+      case 'recomendaciones': return <RecomendacionesView {...props} />
+      case 'ordenes':         return <OrdenesView {...props} />
+      case 'despacho':        return <DespachoView {...props} />
+      case 'ciclos':          return <CiclosView {...props} />
+      case 'viajes':          return <ViajesView {...props} />
+      case 'paradas':         return <ParadasView {...props} />
+    }
+    switch (current) {
       case 'perfil':    return <PerfilView user={user!} />
       case 'usuarios':  return <UsuariosView />
       case 'roles':     return <RolesView />
@@ -1834,13 +1899,14 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <ApiBar baseUrl={baseUrl} onChangeUrl={handleChangeUrl} />
+      <ApiBar baseUrl={baseUrl} onChangeUrl={handleChangeUrl} role={demoRole} onChangeRole={() => handleLogout('rol')} />
       <div style={{ display: 'flex', flex: 1 }}>
-        <Sidebar current={view} onNav={setView} onLogout={handleLogout} user={user!} />
+        <Sidebar current={current} onNav={v => navigate(v)} onLogout={() => handleLogout('login')} user={user!} nav={nav} roleName={demoRole?.nombre} />
         <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', background: T.canvas }}>
-          {renderView()}
+          <div key={`${current}:${JSON.stringify(params ?? {})}`} style={{ height: '100%' }}>{renderView()}</div>
         </main>
       </div>
+      <ApiConsole />
     </div>
   )
 }
