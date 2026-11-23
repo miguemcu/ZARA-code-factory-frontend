@@ -643,7 +643,7 @@ function OrdenDetalle({ id, role, nav, onBack, aprobacionMensaje }: { id: string
 
   const accion = async () => {
     if (!modal) return
-    if (!motivo.trim()) { setBanner({ status: 400, mensaje: 'Escribe el motivo.' }); return }
+    if (!motivo.trim()) { setBanner({ status: 400, mensaje: 'motivo: El motivo es obligatorio' }); return }
     setBusy(true)
     const res = await http.post<Orden>(`/ordenes-reabastecimiento/${id}/${modal}`, { motivo: motivo.trim() })
     setBusy(false)
@@ -745,8 +745,8 @@ function OrdenDetalle({ id, role, nav, onBack, aprobacionMensaje }: { id: string
           )}
           <Field label="Motivo" required><Textarea value={motivo} onChange={setMotivo} rows={3} maxLength={500} placeholder={modal === 'cerrar' ? `Se acepta la pérdida de ${o.cantidadPendiente} unidades en tránsito` : 'Ningún CD tiene stock para esta cantidad'} /></Field>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-            <Btn variant="ghost" onClick={() => setModal(null)}>Volver</Btn>
-            <ApiBtn variant={modal === 'cancelar' ? 'danger' : 'primary'} method="POST" ruta={`/ordenes-reabastecimiento/{id}/${modal}`} real={`/ordenes-reabastecimiento/${id}/${modal}`} onClick={accion} loading={busy} loadingText="Guardando…">{modal === 'cerrar' ? 'Cerrar con faltante' : 'Cancelar orden'}</ApiBtn>
+            <Btn variant="ghost" onClick={() => setModal(null)}>{modal === 'cerrar' ? 'Cancelar' : 'Volver'}</Btn>
+            <ApiBtn variant={modal === 'cancelar' ? 'danger' : 'primary'} method="POST" ruta={`/ordenes-reabastecimiento/{id}/${modal}`} real={`/ordenes-reabastecimiento/${id}/${modal}`} onClick={accion} loading={busy} loadingText="Guardando…">{modal === 'cerrar' ? 'CERRAR CON FALTANTE' : 'Cancelar orden'}</ApiBtn>
           </div>
         </Modal>
       )}
@@ -1132,6 +1132,8 @@ export function ParadasView(_: ViewProps) {
   const [banner, setBanner] = useState<AppBanner | null>(null)
   const [sel, setSel] = useState<ParadaPorRecibir | null>(null)
   const [recibido, setRecibido] = useState(''), [confirmar, setConfirmar] = useState(false), [busy, setBusy] = useState(false)
+  const [recepcionExistente, setRecepcionExistente] = useState<Recepcion | null>(null)
+  const [bodegaAntes, setBodegaAntes] = useState<Stock | null>(null), [bodegaDespues, setBodegaDespues] = useState<Stock | null>(null)
 
   const load = useCallback(async () => {
     setLista(null)
@@ -1147,11 +1149,25 @@ export function ParadasView(_: ViewProps) {
     setBusy(true)
     const res = await http.post<Recepcion>(`/viajes/${sel.viajeId}/paradas/${sel.paradaId}/recepcion`, { cantidadRecibida: Number(recibido) })
     setBusy(false); setConfirmar(false)
-    if (res.error) { setBanner(toBanner(res.error)); if (res.error.status === 409) { setSel(null); load() } return }
+    if (res.error) {
+      if (res.error.status === 422) setBanner({ status: 422, mensaje: res.error.mensaje })
+      else if (res.error.status === 400) setBanner({ status: 400, mensaje: 'La cantidad recibida no puede ser negativa.' })
+      else if (res.error.status === 409) setBanner({ status: 409, mensaje: 'Esta parada todavía no se ha entregado.' })
+      else setBanner(toBanner(res.error))
+      if (res.error.status === 409) load()
+      return
+    }
     const r = res.data!
+    setRecepcionExistente(r)
     setBanner(info(r.discrepancia > 0
-      ? `Recepción registrada con un faltante de ${r.discrepancia}. La orden quedó ${r.estadoOrden === 'CERRADA' ? 'cerrada' : `reabierta con ${r.cantidadPendienteOrden} pendientes`}.`
-      : `Recepción registrada. La orden quedó ${r.estadoOrden === 'CERRADA' ? 'cerrada' : `reabierta con ${r.cantidadPendienteOrden} pendientes`}.`))
+      ? `Recepción registrada. Con un faltante de ${r.discrepancia}. La orden quedó reabierta con ${r.cantidadPendienteOrden} pendientes.`
+      : `Recepción registrada. La orden quedó ${r.estadoOrden === 'CERRADA' ? 'cerrada' : 'reabierta'}.`))
+    const o = ordenDir(r.cicloDespachoId ? sel.ordenId : '')
+    const tienda = tiendas().find(t => t.id === sel.tiendaId)
+    if (tienda?.bodegaId) {
+      const after = await http.get<SpringPage<Stock>>(`/nodos/${tienda.bodegaId}/inventario`)
+      setBodegaDespues(after.data?.content.find(s => s.varianteId === o?.varianteId) ?? null)
+    }
     setSel(null); setRecibido(''); load()
   }
 
@@ -1171,7 +1187,14 @@ export function ParadasView(_: ViewProps) {
           {(lista ?? []).map(p => {
             const o = ordenDir(p.ordenId)
             return (
-              <TRow key={p.paradaId} onClick={() => { setSel(p); setRecibido(String(p.cantidadDespachada)) }} selected={sel?.paradaId === p.paradaId}>
+              <TRow key={p.paradaId} onClick={async () => {
+                setSel(p); setRecibido(String(p.cantidadDespachada)); setRecepcionExistente(null); setBodegaAntes(null); setBodegaDespues(null)
+                const tienda = tiendas().find(t => t.id === p.tiendaId)
+                if (tienda?.bodegaId) {
+                  const stock = await http.get<SpringPage<Stock>>(`/nodos/${tienda.bodegaId}/inventario`)
+                  setBodegaAntes(stock.data?.content.find(s => s.varianteId === o?.varianteId) ?? null)
+                }
+              }} selected={sel?.paradaId === p.paradaId}>
                 <TD><Named name={tiendaName(p.tiendaId)} id={p.tiendaId} /></TD><TD><Named name={viajeDir(p.viajeId)?.vehiculo ?? DASH} id={p.viajeId} /></TD>
                 <TD><Ref id={p.ordenId} /></TD><TD>{o ? <Product id={o.varianteId} /> : <span style={{ color: T.faint }}>{DASH}</span>}</TD><TD mono>{p.cantidadDespachada}</TD>
               </TRow>
@@ -1189,6 +1212,25 @@ export function ParadasView(_: ViewProps) {
                 <div style={{ fontSize: 22, fontFamily: 'var(--font-mono)', color: faltante && faltante > 0 ? T.danger : faltante && faltante < 0 ? T.danger : T.ink }}>{faltante ?? DASH}</div>
                 {faltante !== null && faltante < 0 && <div style={{ fontSize: 12, color: T.danger }}>Lo recibido supera lo despachado.</div>}
               </div>
+              {(bodegaAntes || recepcionExistente) && (
+                <div style={{ border: `1px solid ${T.rule}` }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', fontSize: 11, borderBottom: `1px solid ${T.rule}` }}>
+                    <div style={{ padding: '8px 10px', color: T.muted }}>Bodega</div>
+                    <div style={{ padding: '8px 10px', borderLeft: `1px solid ${T.rule}`, color: T.muted }}>Antes</div>
+                    <div style={{ padding: '8px 10px', borderLeft: `1px solid ${T.rule}`, color: T.muted }}>Después</div>
+                  </div>
+                  {([
+                    ['A la mano', bodegaAntes?.aLaMano, bodegaDespues?.aLaMano],
+                    ['En camino', bodegaAntes?.entrante, bodegaDespues?.entrante],
+                  ] as [string, number | undefined, number | undefined][]).map(([label, before, after]) => (
+                    <div key={label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', fontSize: 12 }}>
+                      <div style={{ padding: '8px 10px' }}>{label}</div>
+                      <div style={{ padding: '8px 10px', borderLeft: `1px solid ${T.rule}`, fontFamily: 'var(--font-mono)' }}>{before ?? DASH}</div>
+                      <div style={{ padding: '8px 10px', borderLeft: `1px solid ${T.rule}`, fontFamily: 'var(--font-mono)' }}>{after ?? (recepcionExistente ? before : DASH)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <ApiBtn method="POST" ruta="/viajes/{viajeId}/paradas/{paradaId}/recepcion" real={`/viajes/${sel.viajeId}/paradas/${sel.paradaId}/recepcion`} onClick={intentar} loading={busy} loadingText="Guardando…">Registrar recepción</ApiBtn>
             </div>
           </Panel>
