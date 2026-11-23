@@ -384,8 +384,21 @@ function Cart({ store, catalogs, sku, setError }: { store: TiendaConNodosRespons
   }, [store, setError])
   const stockByVariant = useMemo(() => new Map(stock.map(row => [row.varianteId, row.aLaMano])), [stock])
   const allowedIds = useMemo(() => new Set(stock.map(row => row.varianteId)), [stock])
-  const update = (index: number, key: string, value: string) => setItems(current => current.map((item, i) => i === index ? { ...item, [key]: value } : item))
+  const beginNewTransaction = () => {
+    if (lastTransaction) {
+      setLastTransaction(null)
+      setTransactionId(uuid())
+      setResult(null)
+      setTimeline([])
+      setMessage('')
+    }
+  }
+  const update = (index: number, key: string, value: string) => {
+    beginNewTransaction()
+    setItems(current => current.map((item, i) => i === index ? { ...item, [key]: value } : item))
+  }
   const chooseVariant = (index: number, value: string) => {
+    beginNewTransaction()
     const variant = catalogs?.variantesBySku.get(value)
     const price = variant ? catalogs?.templatesById.get(variant.templateId)?.precioBase : null
     setItems(current => current.map((item, i) => i === index ? { ...item, sku: value, precioUnitario: price != null ? price.toFixed(2) : item.precioUnitario } : item))
@@ -396,12 +409,12 @@ function Cart({ store, catalogs, sku, setError }: { store: TiendaConNodosRespons
   }
   const submit = async () => {
     setMessage('')
-    if (!store || items.some(item => !item.sku.trim() || Number(item.cantidad) <= 0 || !Number.isInteger(Number(item.cantidad)) || Number(item.precioUnitario) < 0 || !item.precioUnitario || !/^\d+(?:\.\d{1,2})?$/.test(item.precioUnitario))) { setMessage('Selecciona una tienda y completa las variantes, cantidades y precios con un máximo de dos decimales.'); return }
     if (lastTransaction?.id === transactionId) {
       setResult(lastTransaction.sale)
       setMessage('La misma transacción se recibió una sola vez.')
       return
     }
+    if (!store || items.some(item => !item.sku.trim() || Number(item.cantidad) <= 0 || !Number.isInteger(Number(item.cantidad)) || Number(item.precioUnitario) < 0 || !item.precioUnitario || !/^\d+(?:\.\d{1,2})?$/.test(item.precioUnitario))) { setMessage('Selecciona una tienda y completa las variantes, cantidades y precios con un máximo de dos decimales.'); return }
     const beforeAlmacen = new Map(stock.map(row => [row.varianteId, row.aLaMano]))
     const bodegaBefore = await loadNodeStock(store.bodegaId).catch(() => [] as NodeStock[])
     const beforeBodega = new Map(bodegaBefore.map(row => [row.varianteId, row.aLaMano]))
@@ -432,9 +445,9 @@ function Cart({ store, catalogs, sku, setError }: { store: TiendaConNodosRespons
   }
   return <><Box title="Venta"><div style={grid(2)}><Field label="Transacción actual" value={transactionId} onChange={() => undefined} readOnly /></div>
     {store && <div style={{ color: C.muted, fontSize: 12, marginTop: 8 }}>Nodo de venta: Almacén seleccionado</div>}
-    {items.map((item, index) => <div key={index} style={{ ...grid(4), alignItems: 'end', marginTop: 12 }}><VariantChoice by="sku" value={item.sku} onChange={value => chooseVariant(index, value)} catalogs={catalogs} allowedIds={allowedIds} stockByVariant={stockByVariant} emptyMessage="El Almacén de esta tienda aún no tiene variantes cargadas" /><div><Field label="Cantidad" type="number" value={item.cantidad} onChange={value => update(index, 'cantidad', value)} required />{short(item) && <div style={{ color: C.danger, fontSize: 12, marginTop: 5 }}>Sin stock suficiente</div>}</div><Field label="Precio unitario" type="number" value={item.precioUnitario} onChange={value => update(index, 'precioUnitario', value)} required /><Button kind="danger" disabled={items.length === 1} onClick={() => setItems(current => current.filter((_, i) => i !== index))}>Quitar</Button></div>)}
-    <label style={{ display: 'block', margin: '15px 0', fontSize: 13 }}><input type="checkbox" checked={force} onChange={event => setForce(event.target.checked)} /> Forzar sin stock</label>
-    {message && <p style={{ color: C.danger }}>{message}</p>}<div style={{ display: 'flex', gap: 8 }}><Button kind="ghost" disabled={items.length >= 200} onClick={() => setItems(current => [...current, { sku: '', cantidad: '1', precioUnitario: '' }])}>Añadir línea</Button><Button onClick={submit}>Registrar venta</Button></div>
+    {items.map((item, index) => <div key={index} style={{ ...grid(4), alignItems: 'end', marginTop: 12 }}><VariantChoice by="sku" value={item.sku} onChange={value => chooseVariant(index, value)} catalogs={catalogs} allowedIds={allowedIds} stockByVariant={stockByVariant} emptyMessage="El Almacén de esta tienda aún no tiene variantes cargadas" /><div><Field label="Cantidad" type="number" value={item.cantidad} onChange={value => update(index, 'cantidad', value)} required />{short(item) && <div style={{ color: C.danger, fontSize: 12, marginTop: 5 }}>Sin stock suficiente</div>}</div><Field label="Precio unitario" type="number" value={item.precioUnitario} onChange={value => update(index, 'precioUnitario', value)} required /><Button kind="danger" disabled={items.length === 1} onClick={() => { beginNewTransaction(); setItems(current => current.filter((_, i) => i !== index)) }}>Quitar</Button></div>)}
+    <label style={{ display: 'block', margin: '15px 0', fontSize: 13 }}><input type="checkbox" checked={force} onChange={event => { beginNewTransaction(); setForce(event.target.checked) }} /> Forzar sin stock</label>
+    {message && <p style={{ color: C.danger }}>{message}</p>}<div style={{ display: 'flex', gap: 8 }}><Button kind="ghost" disabled={items.length >= 200} onClick={() => { beginNewTransaction(); setItems(current => [...current, { sku: '', cantidad: '1', precioUnitario: '' }]) }}>Añadir línea</Button><Button kind="ghost" onClick={() => { setLastTransaction(null); setResult(null); setTimeline([]); setItems([{ sku: '', cantidad: '1', precioUnitario: '' }]); setForce(false); setTransactionId(uuid()); setMessage('Nueva venta preparada.') }}>Nueva venta</Button><Button onClick={submit}>Registrar venta</Button></div>
   </Box>
   {result && <Box title={`Venta registrada · Total ${result.total.toFixed(2)}`}><DataTable columns={['SKU', 'Cantidad', 'Precio unitario', 'Estado']} rows={result.lineas.map(line => <tr key={line.id}><Cell mono>{sku(line.varianteId)}</Cell><Cell>{line.cantidad}</Cell><Cell>{line.precioUnitario.toFixed(2)}</Cell><Cell><Badge dark={line.estado === 'REGISTRADA'}>{line.estado}</Badge></Cell></tr>)} />{timeline.length > 0 && <ol style={{ margin: '14px 0 0', paddingLeft: 20, color: C.muted, fontSize: 12, lineHeight: 1.7 }}>{timeline.map((step, index) => <li key={index}>{step}</li>)}</ol>}</Box>}</>
 }

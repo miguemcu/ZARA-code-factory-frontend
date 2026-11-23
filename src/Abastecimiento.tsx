@@ -1160,15 +1160,16 @@ export function ParadasView(_: ViewProps) {
     const r = res.data!
     setRecepcionExistente(r)
     setBanner(info(r.discrepancia > 0
-      ? `Recepción registrada. Con un faltante de ${r.discrepancia}. La orden quedó reabierta con ${r.cantidadPendienteOrden} pendientes.`
-      : `Recepción registrada. La orden quedó ${r.estadoOrden === 'CERRADA' ? 'cerrada' : 'reabierta'}.`))
-    const o = ordenDir(r.cicloDespachoId ? sel.ordenId : '')
+      ? `${recepcionExistente ? 'Recepción existente mostrada.' : 'Recepción registrada.'} Con un faltante de ${r.discrepancia}. La orden quedó reabierta con ${r.cantidadPendienteOrden} pendientes.`
+      : `${recepcionExistente ? 'Recepción existente mostrada.' : 'Recepción registrada.'} La orden quedó ${r.estadoOrden === 'CERRADA' ? 'cerrada' : 'reabierta'}.`))
+    const o = ordenDir(sel.ordenId)
     const tienda = tiendas().find(t => t.id === sel.tiendaId)
     if (tienda?.bodegaId) {
       const after = await http.get<SpringPage<Stock>>(`/nodos/${tienda.bodegaId}/inventario`)
       setBodegaDespues(after.data?.content.find(s => s.varianteId === o?.varianteId) ?? null)
     }
-    setSel(null); setRecibido(''); load()
+    setRecibido(String(r.cantidadRecibida))
+    load()
   }
 
   const intentar = () => {
